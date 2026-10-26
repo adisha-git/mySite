@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, m } from "framer-motion";
 import { AlertCircle, CheckCircle2, Loader2, Send } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useForm, type FieldError } from "react-hook-form";
 import { enquiryTypes } from "@/data/profile";
 import { contactSchema, type ContactInput } from "@/lib/contact-schema";
@@ -84,6 +84,14 @@ export function ContactForm() {
     mode: "onTouched",
   });
 
+  // Anti-spam fill-time check and duplicate protection (see /api/contact).
+  const startedAt = useRef(0);
+  const inFlight = useRef(false);
+  const lastAttempt = useRef<{ payload: string; id: string } | null>(null);
+  useEffect(() => {
+    startedAt.current = Date.now();
+  }, []);
+
   // "Request a demo" on a project card pre-fills the enquiry.
   useEffect(() => {
     function onPrefill(event: Event) {
@@ -98,12 +106,26 @@ export function ContactForm() {
   }, [setValue, setFocus]);
 
   async function onSubmit(values: ContactInput) {
+    // Guards against a double click landing before the button re-renders as disabled.
+    if (inFlight.current) return;
+    inFlight.current = true;
     setStatus({ state: "idle" });
+
+    // Retrying the exact same message reuses its ID so the server can't send it twice.
+    const payload = JSON.stringify(values);
+    if (lastAttempt.current?.payload !== payload) {
+      lastAttempt.current = { payload, id: crypto.randomUUID() };
+    }
+
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          startedAt: startedAt.current,
+          submissionId: lastAttempt.current.id,
+        }),
       });
       if (!res.ok) {
         const data: unknown = await res.json().catch(() => null);
@@ -118,12 +140,15 @@ export function ContactForm() {
         return;
       }
       reset(defaults);
+      lastAttempt.current = null;
       setStatus({ state: "success" });
     } catch {
       setStatus({
         state: "error",
         message: "Network error — please check your connection and try again.",
       });
+    } finally {
+      inFlight.current = false;
     }
   }
 
@@ -132,7 +157,7 @@ export function ContactForm() {
   return (
     <form
       noValidate
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={(event) => void handleSubmit(onSubmit)(event)}
       className="border-line bg-surface relative rounded-2xl border p-6 sm:p-8"
       aria-describedby="form-required-note"
     >
