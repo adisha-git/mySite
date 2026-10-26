@@ -16,15 +16,16 @@ cp .env.example .env.local   # then fill in the values (see below)
 npm run dev                  # http://localhost:3000
 ```
 
-| Script                | What it does                                   |
-| --------------------- | ---------------------------------------------- |
-| `npm run dev`         | Development server                             |
-| `npm run build`       | Production build (type-checks too)             |
-| `npm start`           | Serve the production build                     |
-| `npm run lint`        | ESLint                                         |
-| `npm run typecheck`   | TypeScript only                                |
-| `npm run format`      | Prettier (with Tailwind class sorting)         |
-| `npm run screenshots` | Re-capture project screenshots with Playwright |
+| Script                | What it does                                                             |
+| --------------------- | ------------------------------------------------------------------------ |
+| `npm run dev`         | Development server                                                       |
+| `npm run build`       | Production build (type-checks too)                                       |
+| `npm start`           | Serve the production build                                               |
+| `npm run lint`        | ESLint                                                                   |
+| `npm run typecheck`   | TypeScript only                                                          |
+| `npm test`            | Contact API and rate-limiter tests (Vitest; Resend and Redis are mocked) |
+| `npm run format`      | Prettier (with Tailwind class sorting)                                   |
+| `npm run screenshots` | Re-capture project screenshots with Playwright                           |
 
 The contact form works without env vars in development; it just returns a friendly "not configured yet" error. To send real emails locally, put `RESEND_API_KEY` and `CONTACT_TO_EMAIL` in `.env.local` (gitignored) and restart `npm run dev`.
 

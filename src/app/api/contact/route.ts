@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { z } from "zod";
+import { buildContactEmail } from "@/lib/contact-email";
 import { contactRequestSchema } from "@/lib/contact-schema";
 import { rateLimitContact } from "@/lib/rate-limit";
 
@@ -31,13 +32,30 @@ function isSameOrigin(request: Request): boolean {
   }
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+/**
+ * Reads the body as UTF-8, giving up as soon as it passes `maxBytes` so an oversized
+ * request is never buffered in full. Returns null when the body is too large.
+ * Throws on invalid UTF-8.
+ */
+async function readBodyCapped(request: Request, maxBytes: number): Promise<string | null> {
+  const declared = Number(request.headers.get("content-length"));
+  if (declared > maxBytes) return null;
+  if (!request.body) return "";
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks));
 }
 
 export async function POST(request: Request) {
@@ -55,8 +73,8 @@ export async function POST(request: Request) {
 
   let body: unknown;
   try {
-    const raw = await request.text();
-    if (raw.length > MAX_BODY_BYTES) return fail(413, "That message is too long.");
+    const raw = await readBodyCapped(request, MAX_BODY_BYTES);
+    if (raw === null) return fail(413, "That message is too long.");
     body = JSON.parse(raw);
   } catch {
     return fail(400, "Invalid request.");
@@ -84,7 +102,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { name, email, company, enquiryType, message, startedAt, submissionId } = parsed.data;
+  const { email, startedAt, submissionId } = parsed.data;
 
   // Submitted implausibly fast (or with a nonsense timestamp): treat as a bot, quietly.
   const age = Date.now() - startedAt;
@@ -96,48 +114,7 @@ export async function POST(request: Request) {
     return fail(503, "The contact form isn't available right now. Please email me directly.");
   }
 
-  const received = new Intl.DateTimeFormat("en-AU", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Australia/Brisbane",
-  }).format(new Date());
-
-  const rows: [string, string][] = [
-    ["Name", name],
-    ["Email", email],
-    ["Company", company || "—"],
-    ["Regarding", enquiryType],
-    ["Received", `${received} (Brisbane)`],
-  ];
-
-  const text = [
-    "New message from your portfolio website",
-    "",
-    ...rows.map(([k, v]) => `${k}: ${v}`),
-    "",
-    "Message:",
-    message,
-    "",
-    "—",
-    `Reply to this email to respond to ${name} directly.`,
-  ].join("\n");
-
-  const html = `<!doctype html>
-<html><body style="margin:0;padding:24px;background:#F6F8FB">
-  <div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#0B1220;max-width:600px;margin:0 auto;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:24px">
-    <h2 style="margin:0 0 16px;font-size:18px;font-weight:600">New message from your portfolio website</h2>
-    <table role="presentation" style="border-collapse:collapse;margin-bottom:16px;font-size:14px">
-      ${rows
-        .map(
-          ([k, v]) =>
-            `<tr><td style="padding:4px 16px 4px 0;color:#526071;vertical-align:top">${k}</td><td style="padding:4px 0">${escapeHtml(v)}</td></tr>`,
-        )
-        .join("")}
-    </table>
-    <div style="border-top:1px solid #E2E8F0;padding-top:16px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word">${escapeHtml(message)}</div>
-    <p style="margin:24px 0 0;color:#526071;font-size:12px">Reply to this email to respond to ${escapeHtml(name)} directly.</p>
-  </div>
-</body></html>`;
+  const { subject, text, html } = buildContactEmail(parsed.data, new Date());
 
   try {
     const resend = new Resend(RESEND_API_KEY);
@@ -146,7 +123,7 @@ export async function POST(request: Request) {
         from: FROM,
         to: CONTACT_TO_EMAIL,
         replyTo: email,
-        subject: `[Portfolio · ${enquiryType}] ${name}${company ? ` — ${company}` : ""}`,
+        subject,
         text,
         html,
       },
