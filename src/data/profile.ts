@@ -299,8 +299,7 @@ export const profile = {
     {
       role: "Senior Software Engineer",
       company: "MindLogics Limited",
-      // Assumed from the company being NZ-based — adjust if needed.
-      location: "New Zealand · Remote",
+      location: "New Zealand / Australia",
       start: "Jan 2026",
       end: "Aug 2026",
       summary: "Built and maintained scalable React and Next.js applications for agency clients.",
