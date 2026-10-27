@@ -1,5 +1,6 @@
 // Captures 1440×900 screenshots of each live project and saves them as WebP
 // in public/projects/. Run with: npm run screenshots
+// Pass slugs to capture only those, e.g. npm run screenshots -- sri-aero
 //
 // Sites that fail to load are reported; the site falls back to a generated
 // placeholder (see ProjectScreenshot) until a screenshot exists.
@@ -10,7 +11,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const targets = [
-  { slug: "sri-aero", url: "https://sri-aero.vercel.app/" },
+  { slug: "sri-aero", url: "https://www.sriaero.ca/" },
   {
     slug: "dhanesha",
     url: "https://www.dhaneshachemicalsandfertilisers.com/",
@@ -32,7 +33,9 @@ const context = await browser.newContext({
 
 const failures = [];
 
-for (const { slug, url } of targets) {
+const only = process.argv.slice(2);
+
+for (const { slug, url } of targets.filter((t) => !only.length || only.includes(t.slug))) {
   const page = await context.newPage();
   try {
     await page.goto(url, { waitUntil: "networkidle", timeout: 45_000 });

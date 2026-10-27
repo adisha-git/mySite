@@ -246,8 +246,8 @@ export const profile = {
         "Site for a friend's mobile aircraft-detailing business in Calgary — services, fleet and quote requests, with hand-built SVG motion.",
       origin: "friend",
       originLabel: "Built for a friend",
-      url: "https://sri-aero.vercel.app/",
-      status: "In progress",
+      url: "https://www.sriaero.ca/",
+      status: "Live",
       stack: [
         "Next.js",
         "React",
