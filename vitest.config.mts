@@ -20,6 +20,9 @@ export default defineConfig({
       VOYAGE_API_KEY: "",
       DATABASE_URL: "",
       IP_HASH_SALT: "",
+      TURNSTILE_SECRET_KEY: "",
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: "",
+      LEAD_NOTIFY_EMAIL: "",
     },
   },
 });

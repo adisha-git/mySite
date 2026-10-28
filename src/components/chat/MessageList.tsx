@@ -1,6 +1,8 @@
 import { ArrowUpRight, CornerDownRight, Download } from "lucide-react";
 import { stripCitations } from "@/lib/chat/citations";
 import type { ChatUIMessage } from "@/lib/chat/tools";
+import { FactCard } from "./FactCard";
+import { LeadCard } from "./LeadCard";
 import { Markdown } from "./Markdown";
 import { SourceChips } from "./SourceChips";
 
@@ -9,8 +11,28 @@ type Part = ChatUIMessage["parts"][number];
 const actionClass =
   "border-accent/50 text-accent-text hover:bg-accent/10 inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors";
 
-function ToolPart({ part, onSection }: { part: Part; onSection: (id: string) => void }) {
+function ToolPart({
+  part,
+  metadata,
+  onSection,
+}: {
+  part: Part;
+  metadata: ChatUIMessage["metadata"];
+  onSection: (id: string) => void;
+}) {
   switch (part.type) {
+    case "tool-showFacts":
+      if (part.state !== "output-available") return null;
+      return <FactCard facts={part.output.facts} />;
+    case "tool-captureLead":
+      if (part.state !== "output-available") return null;
+      return (
+        <LeadCard
+          draft={part.output.lead}
+          conversationId={metadata?.conversationId}
+          conversationToken={metadata?.conversationToken}
+        />
+      );
     case "tool-downloadCv":
       if (part.state !== "output-available") return null;
       return (
@@ -75,7 +97,14 @@ export function MessageList({
             <div className="space-y-3">
               {message.parts.map((part, i) => {
                 if (part.type !== "text")
-                  return <ToolPart key={i} part={part} onSection={onSection} />;
+                  return (
+                    <ToolPart
+                      key={i}
+                      part={part}
+                      metadata={message.metadata}
+                      onSection={onSection}
+                    />
+                  );
                 // The trailing [[sources: …]] marker becomes the chips below, not text.
                 const text = stripCitations(part.text);
                 return text ? <Markdown key={i} text={text} /> : null;

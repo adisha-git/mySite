@@ -1,23 +1,30 @@
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
-import { MAX_MESSAGE_CHARS, MAX_MESSAGES } from "./limits";
+import { MAX_JD_CHARS, MAX_MESSAGE_CHARS, MAX_MESSAGES } from "./limits";
 
 /**
- * Request guards for the chat API: input limits, IP hashing and rate limits.
+ * Request guards for the chat API: input limits, bot checks, IP hashing and
+ * rate limits.
  *
  * Rate limits live in Upstash Redis so they hold across Vercel instances:
  *  - per hashed IP: 10 messages a minute and 60 a day (sliding windows)
+ *  - per hashed IP: 5 confirmed leads an hour
  * Without Redis credentials (e.g. local dev) it falls back to an in-memory
  * counter, which only limits bursts hitting a single instance.
+ *
+ * Bot check: the first message of a conversation needs a Cloudflare Turnstile
+ * token. The reply carries a signed conversation token, and later messages
+ * in that conversation present it instead.
  */
 
-export { MAX_MESSAGE_CHARS, MAX_MESSAGES };
+export { MAX_JD_CHARS, MAX_MESSAGE_CHARS, MAX_MESSAGES };
 export const MAX_BODY_BYTES = 64 * 1024;
 
 const PER_MINUTE = { max: 10, windowMs: 60 * 1000 } as const;
 const PER_DAY = { max: 60, windowMs: 24 * 60 * 60 * 1000 } as const;
+const LEADS_PER_HOUR = { max: 5, windowMs: 60 * 60 * 1000 } as const;
 
 // ---------- Input ----------
 
@@ -36,10 +43,14 @@ export type ChatMessage = { role: "user" | "assistant"; text: string };
 export const chatRequestSchema = z
   .object({
     conversationId: z.uuid().optional(),
+    conversationToken: z.string().max(128).optional(),
+    turnstileToken: z.string().max(2048).optional(),
+    /** "jd" when the visitor is pasting a job description, which may be longer. */
+    mode: z.enum(["chat", "jd"]).default("chat"),
     messages: z.array(messageSchema).min(1).max(MAX_MESSAGES),
   })
-  .transform(({ conversationId, messages }) => ({
-    conversationId,
+  .transform(({ messages, ...rest }) => ({
+    ...rest,
     messages: messages
       .map((m): ChatMessage => ({
         role: m.role,
@@ -55,8 +66,13 @@ export const chatRequestSchema = z
   .refine((r) => r.messages.at(-1)?.role === "user", "The last message must be from the user.")
   .refine((r) => r.messages.every((m) => m.text.length > 0), "Messages can't be empty.")
   .refine(
-    (r) => r.messages.every((m) => m.role !== "user" || m.text.length <= MAX_MESSAGE_CHARS),
-    `Messages can be at most ${MAX_MESSAGE_CHARS} characters.`,
+    (r) => r.messages.at(-1)!.text.length <= (r.mode === "jd" ? MAX_JD_CHARS : MAX_MESSAGE_CHARS),
+    `Messages can be at most ${MAX_MESSAGE_CHARS} characters (${MAX_JD_CHARS} for a job description).`,
+  )
+  // Earlier messages may include a job description pasted before.
+  .refine(
+    (r) => r.messages.every((m) => m.role !== "user" || m.text.length <= MAX_JD_CHARS),
+    `Messages can be at most ${MAX_JD_CHARS} characters.`,
   );
 
 // ---------- Request checks ----------
@@ -107,12 +123,61 @@ export async function readBodyCapped(
   return new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(parts));
 }
 
-// ---------- IP hashing ----------
+// ---------- IP hashing and signing ----------
 
-/** IPs are only ever stored or used as keys in hashed form. Set IP_HASH_SALT in production. */
+/**
+ * The server secret for hashing IPs and signing conversation tokens. Production
+ * must set IP_HASH_SALT: without it, anyone could forge a conversation token.
+ */
+export function serverSecret(): string | null {
+  const salt = process.env.IP_HASH_SALT;
+  if (salt) return salt;
+  return process.env.NODE_ENV === "production" ? null : "ask-about-adisha-dev";
+}
+
+/** IPs are only ever stored or used as keys in hashed form. */
 export function hashIp(ip: string): string {
-  const salt = process.env.IP_HASH_SALT || "ask-about-adisha";
-  return createHmac("sha256", salt).update(ip).digest("hex");
+  return createHmac("sha256", serverSecret() ?? "unset")
+    .update(ip)
+    .digest("hex");
+}
+
+/** Proves a conversation started with a passed bot check. */
+export function signConversation(conversationId: string, secret: string): string {
+  return createHmac("sha256", secret).update(`conversation:${conversationId}`).digest("base64url");
+}
+
+export function verifyConversation(conversationId: string, token: string, secret: string): boolean {
+  const expected = Buffer.from(signConversation(conversationId, secret));
+  const given = Buffer.from(token);
+  return given.length === expected.length && timingSafeEqual(given, expected);
+}
+
+// ---------- Turnstile ----------
+
+const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+/** Cloudflare's published test secret: always passes. Used only in local development. */
+export const TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA";
+
+export function turnstileSecret(): string | null {
+  if (process.env.NODE_ENV === "development") return TURNSTILE_TEST_SECRET;
+  return process.env.TURNSTILE_SECRET_KEY || null;
+}
+
+/** Server-side Turnstile check. Fails closed: a network error or timeout counts as a failure. */
+export async function verifyTurnstile(token: string, secret: string): Promise<boolean> {
+  try {
+    const res = await fetch(SITEVERIFY_URL, {
+      method: "POST",
+      body: new URLSearchParams({ secret, response: token }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return false;
+    const data = (await res.json()) as { success?: unknown };
+    return data.success === true;
+  } catch {
+    return false;
+  }
 }
 
 // ---------- Rate limiting ----------
@@ -170,6 +235,24 @@ export async function rateLimitChat(ipHash: string, now = Date.now()): Promise<R
     if (!success) return { ok: false, retryAfter: Math.max(1, Math.ceil((reset - now) / 1000)) };
   }
   return { ok: true };
+}
+
+const leadLimiter = redis
+  ? new Ratelimit({
+      redis,
+      prefix: "chat:lead",
+      limiter: Ratelimit.slidingWindow(LEADS_PER_HOUR.max, "1 h"),
+    })
+  : null;
+
+export async function rateLimitLead(ipHash: string, now = Date.now()): Promise<RateLimitResult> {
+  if (!leadLimiter) {
+    return memoryLimit(`lead:${ipHash}`, LEADS_PER_HOUR.max, LEADS_PER_HOUR.windowMs, now);
+  }
+  const { success, reset } = await leadLimiter.limit(ipHash);
+  return success
+    ? { ok: true }
+    : { ok: false, retryAfter: Math.max(1, Math.ceil((reset - now) / 1000)) };
 }
 
 /** Test hook: clears the in-memory fallback counters. */

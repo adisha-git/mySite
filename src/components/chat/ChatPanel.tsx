@@ -5,19 +5,26 @@ import { DefaultChatTransport } from "ai";
 import { ArrowUp, RotateCcw, Square, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatConfig, type ChatStarter } from "@/lib/chat/config";
-import { MAX_MESSAGE_CHARS, MAX_MESSAGES } from "@/lib/chat/limits";
+import { MAX_JD_CHARS, MAX_MESSAGE_CHARS, MAX_MESSAGES } from "@/lib/chat/limits";
 import type { ChatUIMessage } from "@/lib/chat/tools";
 import { MessageList } from "./MessageList";
 import { isSmallScreen, scrollToSection } from "./navigate";
 import { StarterChips } from "./StarterChips";
+import { useTurnstile } from "./useTurnstile";
 
 const DEFAULT_PLACEHOLDER = `Ask about ${chatConfig.persona.subjectName.split(" ")[0]}…`;
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** The server sends the conversation id with each answer; later requests reuse it. */
-function conversationIdOf(messages: ChatUIMessage[]) {
-  return messages.findLast((m) => m.metadata?.conversationId)?.metadata?.conversationId;
+/**
+ * The server sends the conversation id and a signed token with each answer;
+ * later requests send both back instead of a new bot check.
+ */
+function conversationOf(messages: ChatUIMessage[]) {
+  const metadata = messages.findLast((m) => m.metadata?.conversationToken)?.metadata;
+  return metadata
+    ? { conversationId: metadata.conversationId, conversationToken: metadata.conversationToken }
+    : {};
 }
 
 /** Route errors arrive as the JSON body ({ error }); everything else gets a generic line. */
@@ -45,38 +52,64 @@ export function ChatPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
   const handledTools = useRef(new Set<string>());
   const [input, setInput] = useState("");
   const [placeholder, setPlaceholder] = useState(DEFAULT_PLACEHOLDER);
+  // A pasted job description may be longer than a normal message.
+  const [jdMode, setJdMode] = useState(false);
+  const lastMode = useRef<"chat" | "jd">("chat");
+  const sentBotCheck = useRef(false);
+
+  const turnstile = useTurnstile(turnstileRef, open);
+  const { take: takeToken, reset: resetBotCheck } = turnstile;
 
   const transport = useMemo(
     () =>
       new DefaultChatTransport<ChatUIMessage>({
         api: "/api/chat",
-        prepareSendMessagesRequest: ({ messages }) => ({
-          body: { conversationId: conversationIdOf(messages), messages },
+        prepareSendMessagesRequest: ({ messages, body }) => ({
+          body: { ...body, ...conversationOf(messages), messages },
         }),
       }),
     [],
   );
   const { messages, sendMessage, status, stop, error, regenerate } = useChat<ChatUIMessage>({
     transport,
+    // Tokens are single-use: if the request that used one failed, fetch a new one for the retry.
+    onError: () => {
+      if (sentBotCheck.current) resetBotCheck();
+    },
   });
 
   const busy = status === "submitted" || status === "streaming";
   const atLimit = messages.length + 1 > MAX_MESSAGES;
+  const needsBotCheck = !conversationOf(messages).conversationId;
+  const botCheckReady = !needsBotCheck || turnstile.state === "ready";
+
+  /** Per-request fields: the mode, plus a bot-check token for a conversation's first message. */
+  const requestOptions = useCallback(
+    (mode: "chat" | "jd") => {
+      const turnstileToken = needsBotCheck ? (takeToken() ?? undefined) : undefined;
+      sentBotCheck.current = Boolean(turnstileToken);
+      lastMode.current = mode;
+      return { body: { mode, turnstileToken } };
+    },
+    [needsBotCheck, takeToken],
+  );
 
   const send = useCallback(
     (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed || busy || atLimit) return;
-      void sendMessage({ text: trimmed });
+      if (!trimmed || busy || atLimit || !botCheckReady) return;
+      void sendMessage({ text: trimmed }, requestOptions(jdMode ? "jd" : "chat"));
       setInput("");
       setPlaceholder(DEFAULT_PLACEHOLDER);
+      setJdMode(false);
       // A starter chip disappears once clicked; keep focus inside the dialog.
       inputRef.current?.focus();
     },
-    [busy, atLimit, sendMessage],
+    [busy, atLimit, botCheckReady, jdMode, sendMessage, requestOptions],
   );
 
   // On a phone the panel covers the page, so close it before scrolling there.
@@ -90,10 +123,10 @@ export function ChatPanel({
 
   // A message from elsewhere on the page (e.g. "Request a demo").
   useEffect(() => {
-    if (!pendingMessage || busy) return;
-    if (!atLimit) void sendMessage({ text: pendingMessage });
+    if (!pendingMessage || busy || !botCheckReady) return;
+    if (!atLimit) void sendMessage({ text: pendingMessage }, requestOptions("chat"));
     onPendingSent();
-  }, [pendingMessage, busy, atLimit, sendMessage, onPendingSent]);
+  }, [pendingMessage, busy, botCheckReady, atLimit, sendMessage, requestOptions, onPendingSent]);
 
   // Run scrollToSection once, when its result arrives.
   useEffect(() => {
@@ -163,10 +196,12 @@ export function ChatPanel({
       return;
     }
     setPlaceholder(starter.placeholder ?? DEFAULT_PLACEHOLDER);
+    setJdMode(starter.mode === "jd");
     inputRef.current?.focus();
   }
 
-  const remaining = MAX_MESSAGE_CHARS - input.length;
+  const maxChars = jdMode ? MAX_JD_CHARS : MAX_MESSAGE_CHARS;
+  const remaining = maxChars - input.length;
 
   return (
     <div
@@ -222,7 +257,8 @@ export function ChatPanel({
             <p>{errorText(error)}</p>
             <button
               type="button"
-              onClick={() => void regenerate()}
+              onClick={() => void regenerate(requestOptions(lastMode.current))}
+              disabled={!botCheckReady}
               className="text-accent-text mt-2 inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
             >
               <RotateCcw aria-hidden="true" className="size-4" />
@@ -234,6 +270,13 @@ export function ChatPanel({
       </div>
 
       <div className="border-line border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {/* Cloudflare shows the bot check here only if it needs the visitor to interact. */}
+        <div ref={turnstileRef} className="empty:hidden [&:has(iframe)]:mb-2" />
+        {needsBotCheck && turnstile.state === "error" ? (
+          <p role="alert" className="mb-2 text-xs text-red-400">
+            The bot check couldn&apos;t load. Please refresh the page, or use the contact form.
+          </p>
+        ) : null}
         {atLimit ? (
           <p className="text-muted text-sm">
             This chat has reached its limit.{" "}
@@ -270,8 +313,8 @@ export function ChatPanel({
                 }
               }}
               placeholder={placeholder}
-              maxLength={MAX_MESSAGE_CHARS}
-              rows={placeholder === DEFAULT_PLACEHOLDER ? 1 : 4}
+              maxLength={maxChars}
+              rows={jdMode ? 6 : 1}
               aria-describedby={remaining < 200 ? "chat-remaining" : undefined}
               className="bg-surface border-line text-ink placeholder:text-muted focus:border-accent max-h-40 min-h-11 flex-1 resize-none rounded-lg border px-3 py-2.5 text-base outline-none sm:text-sm"
             />
@@ -288,7 +331,7 @@ export function ChatPanel({
               <button
                 type="submit"
                 aria-label="Send"
-                disabled={!input.trim()}
+                disabled={!input.trim() || !botCheckReady}
                 className="bg-accent text-on-accent flex size-11 shrink-0 items-center justify-center rounded-lg transition-opacity disabled:opacity-40"
               >
                 <ArrowUp aria-hidden="true" className="size-5" />

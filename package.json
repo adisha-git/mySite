@@ -15,7 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "ingest": "tsx scripts/ingest.ts",
-    "evals": "node evals/run.ts",
+    "evals": "tsx evals/run.ts",
     "chat:smoke": "tsx scripts/chat-smoke.ts"
   },
   "dependencies": {
@@ -57,6 +57,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "yaml": "^2.9.1"
   }
 }

@@ -26,6 +26,8 @@ export type MessageSource = {
 /** Metadata streamed to the client with each assistant message. */
 export type ChatMessageMetadata = {
   conversationId: string;
+  /** Signed proof that the conversation passed the bot check; sent back with later messages. */
+  conversationToken?: string;
   /** The sources the answer cites; sent when the answer finishes. */
   sources?: MessageSource[];
 };

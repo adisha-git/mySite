@@ -57,3 +57,4 @@ The assistant does not answer these topics itself. It invites visitors to ask Ad
 - Salary and rate expectations
 - References. His CV says referees are available on request.
 - His LinkedIn profile, which is shared on request.
+- His family and personal life, and anything else private.

@@ -1,5 +1,6 @@
-// Fixed facts are served word for word. The model may quote them but never
-// rephrase them. Keep the text in sync with content/knowledge/facts.md.
+// Fixed facts are served word for word: the model asks for them by id with the
+// showFacts tool, and the widget renders this text as a card. The model never
+// writes them. Keep the text in sync with content/knowledge/facts.md.
 
 export type Fact = {
   id: string;
@@ -44,6 +45,16 @@ export const facts: readonly Fact[] = [
     text: "Adisha has 10+ years of experience delivering large-scale web applications across banking, aviation, telecommunications and enterprise environments.",
   },
   {
+    id: "employers",
+    label: "Employers",
+    text: "Adisha's employers, most recent first: MindLogics Limited (January 2026 – August 2026); Oversea-Chinese Banking Corporation (OCBC), Singapore (March 2022 – January 2026); Singapore Airlines, through ITCAN Pte Ltd, Singapore (March 2020 – March 2022); DBS Bank, Singapore (October 2019 – March 2020); Innovative Software Engineering, Colombo, Sri Lanka (August 2018 – October 2019); Omobio, Colombo, Sri Lanka (June 2017 – August 2018); WAD International, Colombo, Sri Lanka (July 2015 – July 2016).",
+  },
+  {
+    id: "education",
+    label: "Education",
+    text: "Adisha holds a BEng (Hons) in Software Engineering from the University of Westminster (2013 – 2017).",
+  },
+  {
     id: "contact",
     label: "Contact",
     text: "The best way to reach Adisha is by email at adisha.madhushanka@gmail.com, or through the contact form on adishamadhushanka.com.au. Adisha's phone number is 0477 160 524.",
@@ -55,4 +66,14 @@ export const handoffTopics: readonly string[] = [
   "Salary and rate expectations",
   "References",
   "His LinkedIn profile, which is shared on request",
+  "His family and personal life",
+  "Anything else private",
 ];
+
+/** The allowlist of fact ids the showFacts tool accepts. */
+export const factIds = facts.map((f) => f.id) as [string, ...string[]];
+
+/** The requested facts, verbatim from this file, in the order asked and without duplicates. */
+export function getFacts(ids: readonly string[]): Fact[] {
+  return [...new Set(ids)].flatMap((id) => facts.filter((f) => f.id === id));
+}

@@ -1,13 +1,16 @@
 // Everything site-specific lives here, so the rest of src/lib/chat/ can be
 // reused on another site by swapping this file and facts.ts.
 
-export type ChatToolName = "captureLead" | "downloadCv" | "scrollToSection" | "openProject";
+export type ChatToolName =
+  "showFacts" | "captureLead" | "downloadCv" | "scrollToSection" | "openProject";
 
 export type ChatStarter = {
   label: string;
   /** Sent as the visitor's message. Without it, the chip focuses the input with `placeholder`. */
   message?: string;
   placeholder?: string;
+  /** "jd": the next message is a pasted job description, which may be longer. */
+  mode?: "jd";
 };
 
 export type ChatConfig = {
@@ -46,6 +49,14 @@ export type ChatConfig = {
   };
   /** Shown in the panel. Chats are stored, so visitors are told. */
   privacyNote: string;
+  leads: {
+    /** Same choices as the site's contact form, so leads from both look alike. */
+    topics: readonly [string, ...string[]];
+    /** Sender on the domain verified in Resend. */
+    emailFrom: string;
+    /** Server env var holding the inbox that receives lead emails. */
+    notifyEnv: string;
+  };
 };
 
 export const chatConfig: ChatConfig = {
@@ -59,7 +70,7 @@ export const chatConfig: ChatConfig = {
   },
   starters: [
     { label: "Is he open to work?", message: "Is he open to work?" },
-    { label: "Check fit against a JD", placeholder: "Paste the job description here…" },
+    { label: "Check fit against a JD", placeholder: "Paste the job description here…", mode: "jd" },
     { label: "How did he build this chat?", message: "How did he build this chat?" },
     { label: "Tell me about OCBC", message: "Tell me about his work at OCBC." },
   ],
@@ -69,7 +80,7 @@ export const chatConfig: ChatConfig = {
     embedding: "voyage-4-lite",
     embeddingDimensions: 1024,
   },
-  enabledTools: ["captureLead", "downloadCv", "scrollToSection", "openProject"],
+  enabledTools: ["showFacts", "captureLead", "downloadCv", "scrollToSection", "openProject"],
   theme: {
     background: "#070b12",
     accent: "#61dafb",
@@ -100,11 +111,22 @@ export const chatConfig: ChatConfig = {
     ],
     sourceSections: [
       { pathPrefix: "content/knowledge/roles/", sectionId: "experience" },
+      {
+        pathPrefix: "content/knowledge/projects/this-chat.md",
+        sectionId: "ai",
+        label: "This chat",
+      },
       { pathPrefix: "content/knowledge/projects/", sectionId: "work" },
       { pathPrefix: "content/knowledge/facts.md", sectionId: "about", label: "Key facts" },
       { pathPrefix: "content/knowledge/stories.md", sectionId: "experience", label: "Stories" },
       { pathPrefix: "content/knowledge/how-i-work.md", sectionId: "about", label: "How he works" },
+      { pathPrefix: "content/knowledge/boundaries.md", sectionId: "contact", label: "Contact" },
     ],
   },
   privacyNote: "Chats are stored to improve answers. Please don't share sensitive information.",
+  leads: {
+    topics: ["Full-time role", "Recruiter / agency", "Chatbot demo", "Other"],
+    emailFrom: "Ask about Adisha <contact@adishamadhushanka.com.au>",
+    notifyEnv: "LEAD_NOTIFY_EMAIL",
+  },
 };
