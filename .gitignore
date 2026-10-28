@@ -43,3 +43,7 @@ next-env.d.ts
 
 # original CV source (the site serves public/Adisha-Madhushanka-CV.pdf)
 /Adisha Madhushanka CV.pdf
+
+# private source material for AI chat
+/content/raw/
+/docs/build-plan.pdf
