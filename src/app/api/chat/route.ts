@@ -1,6 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { stepCountIs, streamText, type ModelMessage } from "ai";
-import { sql } from "drizzle-orm";
+import { hasToolCall, stepCountIs, streamText, type ModelMessage } from "ai";
+import { eq, sql } from "drizzle-orm";
 import { citedSources, parseCitations, stripCitations } from "@/lib/chat/citations";
 import { chatConfig } from "@/lib/chat/config";
 import { getDb } from "@/lib/chat/db/client";
@@ -15,12 +15,18 @@ import {
   clientIp,
   hashIp,
   isSameOrigin,
+  MAX_MESSAGES,
   rateLimitChat,
   readBodyCapped,
+  serverSecret,
+  signConversation,
+  turnstileSecret,
+  verifyConversation,
+  verifyTurnstile,
 } from "@/lib/chat/guard";
 import { buildInstructions } from "@/lib/chat/prompt";
 import { retrieve, type RetrievedChunk } from "@/lib/chat/retrieve";
-import { buildChatTools } from "@/lib/chat/tools";
+import { activeToolsFor, buildChatTools } from "@/lib/chat/tools";
 
 const UNAVAILABLE = "The chat isn't available right now. Please try again later.";
 
@@ -70,6 +76,21 @@ async function saveExchange(e: Exchange) {
   ]);
 }
 
+/** Messages already stored for a conversation; 0 if unknown, so a DB hiccup never blocks a chat. */
+async function storedMessageCount(conversationId: string): Promise<number> {
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select({ count: conversations.messageCount })
+      .from(conversations)
+      .where(eq(conversations.id, conversationId));
+    return row?.count ?? 0;
+  } catch (error) {
+    logError("failed to read conversation", error);
+    return 0;
+  }
+}
+
 export async function POST(request: Request) {
   // Every check here runs before any call to Voyage or Claude.
   if (!isSameOrigin(request)) return fail(403, "Forbidden.");
@@ -100,13 +121,48 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    logError("not configured", new Error("ANTHROPIC_API_KEY is not set"));
+  const secret = serverSecret();
+  if (!process.env.ANTHROPIC_API_KEY || !secret) {
+    logError("not configured", new Error("ANTHROPIC_API_KEY or IP_HASH_SALT is not set"));
     return fail(503, UNAVAILABLE);
   }
 
   const { messages } = parsed.data;
-  const conversationId = parsed.data.conversationId ?? crypto.randomUUID();
+  let conversationId: string;
+  if (parsed.data.conversationId) {
+    // A later message: it must carry the token issued when the conversation passed the bot check.
+    const token = parsed.data.conversationToken;
+    if (!token || !verifyConversation(parsed.data.conversationId, token, secret)) {
+      return Response.json(
+        { error: "This chat session isn't valid any more. Please refresh the page and try again." },
+        { status: 403 },
+      );
+    }
+    conversationId = parsed.data.conversationId;
+    // The client caps the conversation too, but a client can drop its history; the stored count can't.
+    if ((await storedMessageCount(conversationId)) + 2 > MAX_MESSAGES) {
+      return fail(
+        429,
+        "This chat has reached its limit. Please use the contact form to reach Adisha directly.",
+      );
+    }
+  } else {
+    // The first message of a conversation needs a Turnstile token, verified with Cloudflare.
+    const turnstile = turnstileSecret();
+    if (!turnstile) {
+      logError("not configured", new Error("TURNSTILE_SECRET_KEY is not set"));
+      return fail(503, UNAVAILABLE);
+    }
+    const token = parsed.data.turnstileToken;
+    if (!token || !(await verifyTurnstile(token, turnstile))) {
+      return Response.json(
+        { error: "We couldn't confirm you're not a bot. Please try again.", code: "bot-check" },
+        { status: 403 },
+      );
+    }
+    conversationId = crypto.randomUUID();
+  }
+  const conversationToken = signConversation(conversationId, secret);
   const userTexts = messages.filter((m) => m.role === "user").map((m) => m.text);
   const question = userTexts.at(-1)!;
 
@@ -130,13 +186,17 @@ export async function POST(request: Request) {
     m.role === "user" ? { role: "user", content: m.text } : { role: "assistant", content: m.text },
   );
 
+  const tools = buildChatTools(chatConfig);
   const result = streamText({
     model: anthropic(chatConfig.models.chat),
     instructions: buildInstructions(sources),
     messages: modelMessages,
-    tools: buildChatTools(chatConfig),
+    tools,
+    // Site actions only when the visitor asked for one.
+    activeTools: activeToolsFor(question, tools),
     // One step for the answer or a tool call, one more to reply after a tool runs.
-    stopWhen: stepCountIs(2),
+    // A fact card always ends the answer, so no text can follow and repeat it.
+    stopWhen: [stepCountIs(2), hasToolCall("showFacts")],
     providerOptions: { anthropic: { effort: "low" } },
     onFinish: async ({ steps, totalUsage }) => {
       const answer = steps.map((s) => s.text).join("\n\n");
@@ -146,8 +206,16 @@ export async function POST(request: Request) {
           ipHash,
           userAgent: request.headers.get("user-agent")?.slice(0, 256) ?? null,
           question,
+          // The stored answer includes the fact cards' text, as the visitor saw it.
           answer: steps
-            .map((s) => stripCitations(s.text).trim())
+            .flatMap((s) => [
+              stripCitations(s.text).trim(),
+              ...s.toolResults.flatMap((r) =>
+                r.toolName === "showFacts"
+                  ? (r.output as { facts: { text: string }[] }).facts.map((f) => f.text)
+                  : [],
+              ),
+            ])
             .filter(Boolean)
             .join("\n\n"),
           sources: citedMeta(answer),
@@ -164,9 +232,11 @@ export async function POST(request: Request) {
   let streamedText = "";
   return result.toUIMessageStreamResponse({
     messageMetadata: ({ part }): ChatMessageMetadata | undefined => {
-      if (part.type === "start") return { conversationId };
+      if (part.type === "start") return { conversationId, conversationToken };
       if (part.type === "text-delta") streamedText += part.text;
-      if (part.type === "finish") return { conversationId, sources: citedMeta(streamedText) };
+      if (part.type === "finish") {
+        return { conversationId, conversationToken, sources: citedMeta(streamedText) };
+      }
       return undefined;
     },
     onError: (error) => {

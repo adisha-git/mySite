@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { toChips } from "@/components/chat/SourceChips";
 import { chatConfig, type ChatConfig } from "@/lib/chat/config";
-import { buildChatTools } from "@/lib/chat/tools";
+import { facts } from "@/lib/chat/facts";
+import { activeToolsFor, buildChatTools } from "@/lib/chat/tools";
 
 const run = (t: { execute?: unknown } | undefined, input: unknown) =>
   (t!.execute as (i: unknown, o: unknown) => Promise<unknown>)(input, {
@@ -12,8 +13,68 @@ const run = (t: { execute?: unknown } | undefined, input: unknown) =>
 describe("buildChatTools", () => {
   const tools = buildChatTools(chatConfig);
 
-  it("offers the three client actions and leaves captureLead for Day 4", () => {
-    expect(Object.keys(tools).sort()).toEqual(["downloadCv", "openProject", "scrollToSection"]);
+  it("offers fact cards, lead capture and the three client actions", () => {
+    expect(Object.keys(tools).sort()).toEqual([
+      "captureLead",
+      "downloadCv",
+      "openProject",
+      "scrollToSection",
+      "showFacts",
+    ]);
+  });
+
+  describe("showFacts", () => {
+    const parse = (v: unknown) =>
+      (
+        tools.showFacts!.inputSchema as { safeParse: (v: unknown) => { success: boolean } }
+      ).safeParse(v);
+
+    it("returns each requested fact verbatim from facts.ts, once, in the order asked", async () => {
+      const output = (await run(tools.showFacts, {
+        ids: ["location", "work-rights", "location"],
+      })) as {
+        facts: { id: string; text: string }[];
+      };
+      expect(output.facts.map((f) => f.id)).toEqual(["location", "work-rights"]);
+      for (const f of output.facts) expect(f.text).toBe(facts.find((x) => x.id === f.id)!.text);
+    });
+
+    it("only accepts fact ids on the allowlist", () => {
+      expect(parse({ ids: ["education"] }).success).toBe(true);
+      expect(parse({ ids: ["salary"] }).success).toBe(false);
+      expect(parse({ ids: ["location", "__proto__"] }).success).toBe(false);
+      expect(parse({ ids: [] }).success).toBe(false);
+    });
+  });
+
+  it("captureLead only drafts the lead: nothing is saved or sent until the visitor confirms", async () => {
+    const output = await run(tools.captureLead, {
+      name: "Sam Lee",
+      email: "sam@example.com",
+      topic: "Recruiter / agency",
+    });
+    expect(output).toMatchObject({
+      status: "awaiting-confirmation",
+      lead: {
+        name: "Sam Lee",
+        email: "sam@example.com",
+        company: "",
+        topic: "Recruiter / agency",
+        note: "",
+      },
+    });
+  });
+
+  it("captureLead only accepts the contact form's topics", () => {
+    const parse = (
+      tools.captureLead!.inputSchema as { safeParse: (v: unknown) => { success: boolean } }
+    ).safeParse;
+    expect(parse({ name: "Sam", email: "sam@example.com", topic: "Chatbot demo" }).success).toBe(
+      true,
+    );
+    expect(parse({ name: "Sam", email: "sam@example.com", topic: "Sales pitch" }).success).toBe(
+      false,
+    );
   });
 
   it("returns the CV link from config", async () => {
@@ -73,5 +134,33 @@ describe("source chips", () => {
       { path: "content/knowledge/roles/ocbc.md", label: "OCBC Bank", sectionId: "experience" },
       { path: "content/knowledge/facts.md", label: "Key facts", sectionId: "about" },
     ]);
+  });
+});
+
+describe("site actions only when asked", () => {
+  const tools = buildChatTools(chatConfig);
+  const offered = (message: string) => activeToolsFor(message, tools);
+
+  it("doesn't offer to open a project when the visitor only asks about it", () => {
+    for (const message of [
+      "What is HeyKitty?",
+      "Tell me about Sri Aero.",
+      "What did he build at MindLogics?",
+    ]) {
+      expect(offered(message)).not.toContain("openProject");
+      expect(offered(message)).not.toContain("downloadCv");
+    }
+  });
+
+  it("offers the action the visitor asks for", () => {
+    expect(offered("Can I see the Sri Aero site he built?")).toContain("openProject");
+    expect(offered("Can I get a copy of his CV?")).toContain("downloadCv");
+    expect(offered("Show me his experience on the page")).toContain("scrollToSection");
+  });
+
+  it("always offers fact cards and lead capture", () => {
+    expect(offered("Where is he based?")).toEqual(
+      expect.arrayContaining(["showFacts", "captureLead"]),
+    );
   });
 });
