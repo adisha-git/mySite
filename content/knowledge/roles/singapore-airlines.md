@@ -6,7 +6,7 @@ Singapore · March 2020 – March 2022 · Contract through ITCAN Pte Ltd
 
 ## What I owned
 
-At Singapore Airlines, Adisha was part of the Manage Booking team, which designed and developed the Manage Booking frontend platform. The platform supports millions of customer transactions a year across global markets. This was team work.
+At Singapore Airlines, Adisha was part of the Manage Booking team, which designed and developed the Manage Booking frontend platform. The platform supports millions of customer transactions a year across global markets.
 
 Within the team, Adisha contributed to the Redux-based state management for complex, multi-step booking workflows with real-time data synchronisation. He also contributed to integrating the frontend with AWS cloud services and Node.js backend APIs, as part of the team's work to keep the platform available and fast under peak traffic. He took part in the team's technical design reviews and effort estimation to support sprint planning and delivery.
 
@@ -34,7 +34,7 @@ It started as a small component library repository. By the time Adisha left, it 
 
 ## What I'm proud of
 
-Adisha is proud of starting Singapore Airlines' shared React component library. When he joined, there was no reusable component library. He proposed the idea of one that multiple teams could use, and worked with the team to build it. By the time Adisha left, most frontend teams at Singapore Airlines were using it.
+Adisha is most proud of starting the shared React component library described above, which most frontend teams at Singapore Airlines were using by the time he left.
 
 ## Mentoring and leadership
 

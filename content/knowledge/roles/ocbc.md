@@ -6,19 +6,19 @@ Singapore · March 2022 – January 2026
 
 ## What I owned
 
-At Oversea-Chinese Banking Corporation (OCBC), Adisha led frontend architecture for RM Frontend, an internal front-office banking application that supports relationship managers with client-portfolio management. He worked on this one project and led frontend architecture for its team.
+At Oversea-Chinese Banking Corporation (OCBC), Adisha led frontend architecture and technical decision-making for an internal front-office banking application that helps relationship managers manage client portfolios. He designed and implemented React applications integrated with Java Spring Boot microservices, in a secure, high-availability banking environment.
 
-RM Frontend's wealth-management workflows included order management and product execution. These were among the features the team worked on, with Adisha as part of that team.
+The team's work on the application included wealth-management workflows such as order management and product execution.
 
-He designed and built the RM Frontend application in React, integrated with Java Spring Boot microservices, in a secure, high-availability banking environment.
+[TO CONFIRM: the application's name (RM Frontend?), and whether he led one project team or several product teams. His CV says "across multiple product teams delivering retail and corporate banking platforms".]
 
 ## Team and setup
 
-The RM Frontend project team had around 12 people, including about four frontend developers. Adisha was the frontend technical lead: he led frontend architecture and mentored developers, without formal line-management responsibilities. Releases were monthly.
+The project team had around 12 people, including about four frontend developers. Adisha was the frontend technical lead: he led frontend architecture and mentored developers, without formal line-management responsibilities. Releases were monthly.
 
 The stack included React JS, JavaScript, Java, Spring Boot 2 and 3, Docker, OpenShift, Jenkins, JUnit 5, PostgreSQL and Redis. Adisha also used Claude Code, GitHub Copilot and AI coding agents in this role.
 
-He worked closely with UX, backend and product stakeholders to turn complex business requirements into performant, user-centred features in the RM Frontend application.
+He worked closely with UX, backend and product stakeholders to turn complex business requirements into performant, user-centred features.
 
 ## Frontend practices and tooling
 
@@ -36,7 +36,7 @@ Adisha evaluated and introduced modern frontend practices and tooling to improve
 
 ## Mentoring and leadership
 
-As technical lead, Adisha mentored junior and mid-level engineers through structured code reviews, architectural guidance and knowledge-sharing initiatives. He had no formal line-management responsibilities.
+As technical lead, Adisha mentored junior and mid-level engineers through structured code reviews, architectural guidance and knowledge sharing.
 
 [TO CONFIRM: one specific example, if you have one. Otherwise delete this marker.]
 
