@@ -1,0 +1,21 @@
+{
+  "ranAt": "2026-10-28T14:21:34.342Z",
+  "baseUrl": "http://localhost:3000",
+  "passed": 1,
+  "total": 1,
+  "results": [
+    {
+      "id": "facts-education",
+      "category": "facts",
+      "question": "Where did he study?",
+      "must": ["University of Westminster"],
+      "mustNot": [],
+      "passed": true,
+      "failures": [],
+      "warnings": [],
+      "answer": "Adisha holds a BEng (Hons) in Software Engineering from the University of Westminster (2013 – 2017).",
+      "tools": [],
+      "sources": []
+    }
+  ]
+}

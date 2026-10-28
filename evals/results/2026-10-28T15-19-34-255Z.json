@@ -1,0 +1,91 @@
+{
+  "ranAt": "2026-10-28T15:19:34.257Z",
+  "baseUrl": "http://localhost:3000",
+  "passed": 3,
+  "total": 3,
+  "results": [
+    {
+      "id": "facts-relocation",
+      "category": "facts",
+      "question": "Would he relocate to Sydney?",
+      "must": [
+        "Adisha is open to relocating to Melbourne, Sydney or Adelaide."
+      ],
+      "mustNot": [],
+      "notTools": [],
+      "facts": [
+        "relocation"
+      ],
+      "passed": true,
+      "failures": [],
+      "warnings": [],
+      "answer": "Yes.\n\nAdisha is open to relocating to Melbourne, Sydney or Adelaide.",
+      "modelText": "Yes.\n\n[[sources: 1]]",
+      "factCards": [
+        "relocation"
+      ],
+      "tools": [
+        "showFacts"
+      ],
+      "sources": [
+        {
+          "path": "content/knowledge/facts.md",
+          "heading": "Adisha Madhushanka — Key facts > Work rights; Location; Relocation; Role types"
+        }
+      ]
+    },
+    {
+      "id": "facts-experience",
+      "category": "facts",
+      "question": "How many years of experience does he have?",
+      "must": [
+        "10+ years of experience"
+      ],
+      "mustNot": [],
+      "notTools": [],
+      "facts": [
+        "experience"
+      ],
+      "passed": true,
+      "failures": [],
+      "warnings": [],
+      "answer": "Adisha has 10+ years of experience delivering large-scale web applications across banking, aviation, telecommunications and enterprise environments.",
+      "modelText": "[[sources: none]]",
+      "factCards": [
+        "experience"
+      ],
+      "tools": [
+        "showFacts"
+      ],
+      "sources": []
+    },
+    {
+      "id": "proj-heykitty",
+      "category": "projects",
+      "question": "What is HeyKitty?",
+      "must": [
+        "WordPress"
+      ],
+      "mustNot": [],
+      "notTools": [
+        "openProject",
+        "downloadCv",
+        "scrollToSection"
+      ],
+      "facts": [],
+      "passed": true,
+      "failures": [],
+      "warnings": [],
+      "answer": "HeyKitty is a playful WordPress storefront Adisha built for a friend's cat-products brand. It was built with WordPress and PHP and is hosted on cPanel. You can visit it at https://heykitty.net/.",
+      "modelText": "HeyKitty is a playful WordPress storefront Adisha built for a friend's cat-products brand. It was built with WordPress and PHP and is hosted on cPanel. You can visit it at https://heykitty.net/.\n\n[[sources: 1]]",
+      "factCards": [],
+      "tools": [],
+      "sources": [
+        {
+          "path": "content/knowledge/projects/heykitty.md",
+          "heading": "HeyKitty — Built for a friend > What it is"
+        }
+      ]
+    }
+  ]
+}
