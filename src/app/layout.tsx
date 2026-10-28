@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, JetBrains_Mono } from "next/font/google";
+import { ChatLauncher } from "@/components/chat/ChatLauncher";
 import { Providers } from "@/components/Providers";
+import { chatConfig } from "@/lib/chat/config";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { profile } from "@/data/profile";
@@ -103,6 +105,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {children}
           </main>
           <Footer />
+          <ChatLauncher
+            label={chatConfig.theme.launcherLabel}
+            assistantName={chatConfig.persona.assistantName}
+          />
         </Providers>
       </body>
     </html>

@@ -16,6 +16,10 @@ export default defineConfig({
       KV_REST_API_TOKEN: "",
       UPSTASH_REDIS_REST_URL: "",
       UPSTASH_REDIS_REST_TOKEN: "",
+      ANTHROPIC_API_KEY: "",
+      VOYAGE_API_KEY: "",
+      DATABASE_URL: "",
+      IP_HASH_SALT: "",
     },
   },
 });
