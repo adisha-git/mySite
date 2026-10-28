@@ -38,7 +38,7 @@ Skills it shows: owning a mistake, architectural judgement, state management in 
 
 ## Delivering the MindLogics Visa Workflow system on a tight deadline
 
-Situation: At MindLogics, Adisha's team had to deliver the Visa Workflow Management System within a tight timeframe. Users upload passports and supporting documents, AWS-based AI services identify each document's type and extract its information, and the results are stored in a database for the workflow.
+Situation: At MindLogics, Adisha's team had to deliver the Visa Workflow Management System, which reads uploaded passports and supporting documents with AWS AI services, within a tight timeframe.
 
 What Adisha did: He prioritised the essential functionality: document upload, information extraction and document review. He built reusable components for these flows so they could be used across the application, which reduced repeated development work. He also used AI-assisted development to speed up implementation and to help generate unit tests, particularly for edge cases.
 
