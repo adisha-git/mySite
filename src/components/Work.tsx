@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { Project, ProjectCategory, ProjectOrigin, ProjectStatus } from "@/data/profile";
-import { requestContactPrefill } from "./contact-prefill";
+import { openChat } from "./chat/open-chat";
 import { ProjectVisual } from "./ProjectVisual";
 import { buttonClass } from "./ui";
 
@@ -84,12 +84,7 @@ function ProjectCard({ project }: { project: Project }) {
             <button
               type="button"
               className={buttonClass("primary", "!px-4 !py-2")}
-              onClick={() =>
-                requestContactPrefill({
-                  enquiryType: "Chatbot demo",
-                  message: `Hi Adisha, I'd like a demo of the ${project.name}.`,
-                })
-              }
+              onClick={() => openChat({ message: `I'd like a demo of the ${project.name}.` })}
             >
               <MessageSquare aria-hidden="true" className="size-4" />
               Request a demo

@@ -11,7 +11,10 @@ const { retrieve, streamText, toUIMessageStreamResponse } = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/chat/retrieve", () => ({ retrieve }));
-vi.mock("ai", () => ({ streamText }));
+vi.mock("ai", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("ai")>()),
+  streamText,
+}));
 vi.mock("@ai-sdk/anthropic", () => ({ anthropic: vi.fn(() => "mock-model") }));
 vi.mock("@/lib/chat/db/client", () => ({
   getDb: () => {
@@ -126,22 +129,90 @@ describe("POST /api/chat", () => {
     expect(call.instructions[0].content).toContain("contact form on this site");
     expect(call.instructions[0].content).not.toMatch(/offer to pass/i);
     expect(call.instructions[1].content).toContain(
-      '<source path="content/knowledge/roles/ocbc.md"',
+      '<source id="1" path="content/knowledge/roles/ocbc.md"',
     );
     expect(call.messages).toEqual([{ role: "user", content: "What did Adisha do at OCBC?" }]);
   });
 
-  it("sends the conversation id and sources as metadata at the start of the stream", async () => {
+  it("gives the model the site action tools", async () => {
+    await POST(post({ messages: [userMessage("Can I see his CV?")] }));
+    const call = (streamText.mock.calls[0] as unknown[])[0] as { tools: Record<string, unknown> };
+    expect(Object.keys(call.tools).sort()).toEqual([
+      "downloadCv",
+      "openProject",
+      "scrollToSection",
+    ]);
+  });
+
+  it("accepts history where an assistant turn only used a tool, and drops it", async () => {
+    const res = await POST(
+      post({
+        messages: [
+          userMessage("Show me his experience"),
+          {
+            id: "a1",
+            role: "assistant",
+            parts: [
+              {
+                type: "tool-scrollToSection",
+                toolCallId: "t1",
+                state: "output-available",
+                input: { section: "experience" },
+                output: { section: "experience", label: "Experience" },
+              },
+            ],
+          },
+          { ...userMessage("Thanks. Is he open to work?"), id: "m2" },
+        ],
+      }),
+    );
+    expect(res.status).toBe(200);
+    const call = (streamText.mock.calls[0] as unknown[])[0] as { messages: unknown[] };
+    expect(call.messages).toEqual([
+      { role: "user", content: "Show me his experience" },
+      { role: "user", content: "Thanks. Is he open to work?" },
+    ]);
+  });
+
+  describe("stream metadata", () => {
     const conversationId = "6f1c1b7e-3b0a-4b8e-9a52-1f2d3c4b5a69";
-    await POST(post({ conversationId, messages: [userMessage("Hi")] }));
-    const options = (toUIMessageStreamResponse.mock.calls[0] as unknown[])[0] as {
-      messageMetadata: (o: { part: { type: string } }) => unknown;
-    };
-    expect(options.messageMetadata({ part: { type: "start" } })).toEqual({
-      conversationId,
-      sources: [{ path: SOURCE.sourcePath, heading: SOURCE.headingPath }],
+    const OTHER = { ...SOURCE, id: "2", sourcePath: "content/knowledge/roles/mindlogics.md" };
+
+    async function metadataFor(...deltas: string[]) {
+      retrieve.mockResolvedValue([SOURCE, OTHER]);
+      await POST(post({ conversationId, messages: [userMessage("What did he do at OCBC?")] }));
+      const { messageMetadata } = (toUIMessageStreamResponse.mock.calls[0] as unknown[])[0] as {
+        messageMetadata: (o: { part: { type: string; text?: string } }) => unknown;
+      };
+      const start = messageMetadata({ part: { type: "start" } });
+      for (const text of deltas) {
+        expect(messageMetadata({ part: { type: "text-delta", text } })).toBeUndefined();
+      }
+      return { start, finish: messageMetadata({ part: { type: "finish" } }) };
+    }
+
+    it("sends the conversation id at the start, before any sources are known", async () => {
+      const { start } = await metadataFor("Hi");
+      expect(start).toEqual({ conversationId });
     });
-    expect(options.messageMetadata({ part: { type: "text-delta" } })).toBeUndefined();
+
+    it("sends only the sources the answer cites when it finishes", async () => {
+      const { finish } = await metadataFor("He led RM Frontend.\n\n[[sour", "ces: 1]]");
+      expect(finish).toEqual({
+        conversationId,
+        sources: [{ path: SOURCE.sourcePath, heading: SOURCE.headingPath }],
+      });
+    });
+
+    it("sends no sources when the answer cites none or has no marker", async () => {
+      expect((await metadataFor("I don't know.\n\n[[sources: none]]")).finish).toEqual({
+        conversationId,
+        sources: [],
+      });
+      vi.clearAllMocks();
+      resetMemoryRateLimit();
+      expect((await metadataFor("I don't know.")).finish).toEqual({ conversationId, sources: [] });
+    });
   });
 
   it("allows 10 messages a minute per IP, then returns 429 without calling Claude", async () => {

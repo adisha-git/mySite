@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
+import { MAX_MESSAGE_CHARS, MAX_MESSAGES } from "./limits";
 
 /**
  * Request guards for the chat API: input limits, IP hashing and rate limits.
@@ -12,8 +13,7 @@ import { z } from "zod";
  * counter, which only limits bursts hitting a single instance.
  */
 
-export const MAX_MESSAGE_CHARS = 2000;
-export const MAX_MESSAGES = 20;
+export { MAX_MESSAGE_CHARS, MAX_MESSAGES };
 export const MAX_BODY_BYTES = 64 * 1024;
 
 const PER_MINUTE = { max: 10, windowMs: 60 * 1000 } as const;
@@ -40,14 +40,17 @@ export const chatRequestSchema = z
   })
   .transform(({ conversationId, messages }) => ({
     conversationId,
-    messages: messages.map((m): ChatMessage => ({
-      role: m.role,
-      text: m.parts
-        .filter((p): p is z.infer<typeof textPart> => p.type === "text" && "text" in p)
-        .map((p) => p.text)
-        .join("\n")
-        .trim(),
-    })),
+    messages: messages
+      .map((m): ChatMessage => ({
+        role: m.role,
+        text: m.parts
+          .filter((p): p is z.infer<typeof textPart> => p.type === "text" && "text" in p)
+          .map((p) => p.text)
+          .join("\n")
+          .trim(),
+      }))
+      // An assistant turn that only used a tool (e.g. scrolled the page) has no text to resend.
+      .filter((m) => m.role === "user" || m.text.length > 0),
   }))
   .refine((r) => r.messages.at(-1)?.role === "user", "The last message must be from the user.")
   .refine((r) => r.messages.every((m) => m.text.length > 0), "Messages can't be empty.")

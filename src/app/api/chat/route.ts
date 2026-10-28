@@ -1,6 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { streamText, type ModelMessage } from "ai";
+import { stepCountIs, streamText, type ModelMessage } from "ai";
 import { sql } from "drizzle-orm";
+import { citedSources, parseCitations, stripCitations } from "@/lib/chat/citations";
 import { chatConfig } from "@/lib/chat/config";
 import { getDb } from "@/lib/chat/db/client";
 import {
@@ -19,6 +20,7 @@ import {
 } from "@/lib/chat/guard";
 import { buildInstructions } from "@/lib/chat/prompt";
 import { retrieve, type RetrievedChunk } from "@/lib/chat/retrieve";
+import { buildChatTools } from "@/lib/chat/tools";
 
 const UNAVAILABLE = "The chat isn't available right now. Please try again later.";
 
@@ -120,6 +122,9 @@ export async function POST(request: Request) {
     path: s.sourcePath,
     heading: s.headingPath,
   }));
+  // Only the sources the answer cites become chips. No marker means no chips:
+  // better none than ones that didn't support the answer.
+  const citedMeta = (text: string) => citedSources(sourceMeta, parseCitations(text) ?? []);
 
   const modelMessages: ModelMessage[] = messages.map((m) =>
     m.role === "user" ? { role: "user", content: m.text } : { role: "assistant", content: m.text },
@@ -129,16 +134,23 @@ export async function POST(request: Request) {
     model: anthropic(chatConfig.models.chat),
     instructions: buildInstructions(sources),
     messages: modelMessages,
+    tools: buildChatTools(chatConfig),
+    // One step for the answer or a tool call, one more to reply after a tool runs.
+    stopWhen: stepCountIs(2),
     providerOptions: { anthropic: { effort: "low" } },
-    onFinish: async ({ text, totalUsage }) => {
+    onFinish: async ({ steps, totalUsage }) => {
+      const answer = steps.map((s) => s.text).join("\n\n");
       try {
         await saveExchange({
           conversationId,
           ipHash,
           userAgent: request.headers.get("user-agent")?.slice(0, 256) ?? null,
           question,
-          answer: text,
-          sources: sourceMeta,
+          answer: steps
+            .map((s) => stripCitations(s.text).trim())
+            .filter(Boolean)
+            .join("\n\n"),
+          sources: citedMeta(answer),
           tokensIn: totalUsage.inputTokens,
           tokensOut: totalUsage.outputTokens,
         });
@@ -148,9 +160,15 @@ export async function POST(request: Request) {
     },
   });
 
+  // Called for every streamed part: collect the text, then send the cited sources at the end.
+  let streamedText = "";
   return result.toUIMessageStreamResponse({
-    messageMetadata: ({ part }): ChatMessageMetadata | undefined =>
-      part.type === "start" ? { conversationId, sources: sourceMeta } : undefined,
+    messageMetadata: ({ part }): ChatMessageMetadata | undefined => {
+      if (part.type === "start") return { conversationId };
+      if (part.type === "text-delta") streamedText += part.text;
+      if (part.type === "finish") return { conversationId, sources: citedMeta(streamedText) };
+      return undefined;
+    },
     onError: (error) => {
       logError("generation failed", error);
       return "Sorry, something went wrong. Please try again.";

@@ -26,7 +26,8 @@ export type MessageSource = {
 /** Metadata streamed to the client with each assistant message. */
 export type ChatMessageMetadata = {
   conversationId: string;
-  sources: MessageSource[];
+  /** The sources the answer cites; sent when the answer finishes. */
+  sources?: MessageSource[];
 };
 
 // One row per heading-based chunk of a content/knowledge file.
