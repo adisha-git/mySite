@@ -89,7 +89,7 @@ export const profile = {
   },
   relocation: ["Sydney", "Melbourne", "Adelaide"],
   workRights: "Unrestricted Australian working rights",
-  availability: "Open to senior engineering roles",
+  availability: "Available to start immediately",
 
   email: "adisha.madhushanka@gmail.com",
   // TODO: replace with your LinkedIn profile URL, e.g. https://www.linkedin.com/in/your-handle/
@@ -105,20 +105,22 @@ export const profile = {
 
   /** What kind of role you're after — shown in the hero, code card and Contact section. */
   jobSearch: {
-    summary: "a senior frontend or full-stack role",
+    summary: "a frontend, full-stack or AI engineering role",
     roles: [
-      "Senior Software Engineer",
-      "Senior Frontend Engineer (React / Next.js)",
-      "Senior Full-stack Engineer",
+      "Frontend / Senior Frontend Engineer (React / Next.js)",
+      "Full-stack Engineer",
+      "Staff Engineer",
+      "AI Engineer",
+      "Permanent or contract, any industry",
     ],
-    codeCard: "Senior Frontend / Full-stack role",
+    codeCard: "Frontend / Full-stack / AI role",
   },
 
   about: [
     "I'm a senior software engineer with more than ten years of experience building web and mobile products that people rely on every day — from digital banking at OCBC and DBS, to Singapore Airlines' Manage Booking platform, to Dialog Axiata's MyDialog app used by millions in Sri Lanka.",
-    "I've led frontend architecture across multiple product teams, set the patterns other engineers build on, and spent a lot of time mentoring junior and mid-level developers through code review and pairing.",
+    "As a frontend technical lead, I've led frontend architecture and mentored junior and mid-level developers through code reviews, architectural guidance and knowledge sharing.",
     "Today I work with modern AI-assisted and agentic development — Claude Code, GitHub Copilot, AI coding agents and RAG — to ship faster without lowering the bar on security, accessibility or code quality.",
-    "I'm now looking for my next full-time role: a senior frontend or full-stack position on a product team that values quality, ownership and good engineering practice — in Brisbane, or relocating to Sydney, Melbourne or Adelaide.",
+    "I'm now looking for my next role, permanent or contract: frontend, full-stack, staff or AI engineering, in any industry. I'm based in Brisbane and open to remote, hybrid or on-site work, or to relocating to Sydney, Melbourne or Adelaide.",
   ],
 
   /** Shown in the hero's code card as `ai: [...]`. */
@@ -302,17 +304,20 @@ export const profile = {
       location: "New Zealand / Australia",
       start: "Jan 2026",
       end: "Aug 2026",
-      summary: "Built and maintained scalable React and Next.js applications for agency clients.",
+      summary:
+        "Frontend technical lead in a team of five on a Visa Workflow Management System, built with TypeScript and React.",
       highlights: [
-        "Built reusable React components and integrated frontends with RESTful APIs.",
-        "Applied AI-assisted workflows with Claude Code, GitHub Copilot and AI coding agents for design, refactoring, testing and documentation.",
-        "Developed AI-enabled solutions using LLMs, agentic workflows and retrieval-augmented generation (RAG).",
+        "Helped design and set up the frontend architecture, project structure and reusable base components, and contributed to the core workflow.",
+        "Worked with Amazon Textract and Amazon Bedrock on the system's AI document data extraction.",
+        "Used Claude Code, GitHub Copilot and AI coding agents for design, refactoring, debugging, testing and documentation.",
       ],
       tags: [
         "React",
         "React Native",
         "Next.js",
         "TypeScript",
+        "Amazon Textract",
+        "Amazon Bedrock",
         "RAG",
         "LLM integration",
         "Redis",
@@ -327,10 +332,10 @@ export const profile = {
       start: "Mar 2022",
       end: "Jan 2026",
       summary:
-        "Led frontend architecture across multiple product teams for retail and corporate banking.",
+        "Led frontend architecture for RM Frontend, an internal front-office application for relationship managers.",
       highlights: [
-        "Owned frontend architecture and technical decisions across multiple retail and corporate banking teams.",
-        "Built React applications integrated with Java Spring Boot microservices in a secure, high-availability environment.",
+        "Frontend technical lead in a project team of around 12, including about four frontend developers.",
+        "Designed and built the RM Frontend application in React, integrated with Java Spring Boot microservices in a secure, high-availability environment.",
         "Mentored junior and mid-level engineers through structured code reviews and architectural guidance.",
       ],
       tags: [
@@ -352,13 +357,13 @@ export const profile = {
       start: "Mar 2020",
       end: "Mar 2022",
       summary:
-        "Built the Manage Booking platform serving millions of customer transactions a year.",
+        "Part of the Manage Booking team, whose platform supports millions of customer transactions a year.",
       highlights: [
-        "Designed and developed the Manage Booking frontend, used across global markets.",
-        "Architected strongly typed, reusable React component libraries shared across teams.",
-        "Implemented Redux state management for complex, multi-step booking flows.",
+        "Proposed a shared React and TypeScript component library and built it with the team; by the time I left, most frontend teams at Singapore Airlines were using it.",
+        "Contributed to Redux state management for complex, multi-step booking flows.",
+        "Worked full-stack, including on the backend-for-frontend layer.",
       ],
-      tags: ["React", "Redux", "AWS", "Node.js", "Material UI"],
+      tags: ["React", "TypeScript", "Redux", "Storybook", "AWS", "Node.js", "Material UI"],
     },
     {
       role: "React JS Developer",

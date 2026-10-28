@@ -8,7 +8,7 @@ Singapore · March 2020 – March 2022 · Contract through ITCAN Pte Ltd
 
 At Singapore Airlines, Adisha was part of the Manage Booking team, which designed and developed the Manage Booking frontend platform. The platform supports millions of customer transactions a year across global markets. This was team work.
 
-He implemented Redux-based state management for complex, multi-step booking workflows with real-time data synchronisation. He integrated the frontend with AWS cloud services and Node.js backend APIs, keeping it available and fast under peak traffic. He also ran technical design reviews and effort estimation to support sprint planning and delivery.
+Within the team, Adisha contributed to the Redux-based state management for complex, multi-step booking workflows with real-time data synchronisation. He also contributed to integrating the frontend with AWS cloud services and Node.js backend APIs, as part of the team's work to keep the platform available and fast under peak traffic. He took part in the team's technical design reviews and effort estimation to support sprint planning and delivery.
 
 ## How Adisha joined Singapore Airlines
 
