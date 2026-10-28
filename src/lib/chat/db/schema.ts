@@ -23,6 +23,12 @@ export type MessageSource = {
   heading: string;
 };
 
+/** Metadata streamed to the client with each assistant message. */
+export type ChatMessageMetadata = {
+  conversationId: string;
+  sources: MessageSource[];
+};
+
 // One row per heading-based chunk of a content/knowledge file.
 export const chunks = pgTable(
   "chunks",

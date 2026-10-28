@@ -50,7 +50,7 @@ export const facts: readonly Fact[] = [
   },
 ];
 
-// Topics the assistant never answers itself; it offers to pass them to Adisha.
+// Topics the assistant never answers itself; it points visitors to the contact form instead.
 export const handoffTopics: readonly string[] = [
   "Salary and rate expectations",
   "References",
