@@ -82,11 +82,10 @@ export function MessageList({
     <ol className="space-y-5">
       {messages.map((message) =>
         message.role === "user" ? (
-          // On phones the panel is full width, so the visitor's messages get a tinted,
-          // right-aligned bubble to tell them apart from replies.
+          // The visitor's messages get a tinted, right-aligned bubble to tell them apart from replies.
           <li
             key={message.id}
-            className="max-sm:border-accent/30 max-sm:bg-accent/10 flex gap-2 font-mono text-sm max-sm:ml-auto max-sm:w-fit max-sm:max-w-[85%] max-sm:rounded-xl max-sm:rounded-br-sm max-sm:border max-sm:px-3 max-sm:py-2"
+            className="border-accent/30 bg-accent/10 ml-auto flex w-fit max-w-[85%] gap-2 rounded-xl rounded-br-sm border px-3 py-2 font-mono text-sm"
           >
             <span aria-hidden="true" className="text-accent-text select-none">
               $
