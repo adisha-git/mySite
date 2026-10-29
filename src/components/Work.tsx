@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { Project, ProjectCategory, ProjectOrigin, ProjectStatus } from "@/data/profile";
+import { isProjectName, track, type ProjectLinkType } from "@/lib/analytics";
 import { openChat } from "./chat/open-chat";
 import { ProjectVisual } from "./ProjectVisual";
 import { buttonClass } from "./ui";
@@ -35,6 +36,11 @@ const statusStyles: Record<ProjectStatus, string> = {
 
 function ProjectCard({ project }: { project: Project }) {
   const OriginIcon = originIcons[project.origin];
+  const trackClick = (linkType: ProjectLinkType) => {
+    if (isProjectName(project.slug)) {
+      track("project_click", { project_name: project.slug, link_type: linkType });
+    }
+  };
   return (
     <article className="group border-line bg-surface relative flex h-full flex-col rounded-2xl border p-3 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-[color-mix(in_srgb,var(--accent)_45%,var(--line))] hover:shadow-[0_24px_60px_-30px_var(--accent)]">
       <ProjectVisual project={project} />
@@ -73,6 +79,7 @@ function ProjectCard({ project }: { project: Project }) {
               href={project.url}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackClick("visit_site")}
               className="text-ink decoration-accent inline-flex items-center gap-1 text-sm font-medium underline decoration-1 underline-offset-[6px] hover:decoration-2"
             >
               Visit site
@@ -86,7 +93,10 @@ function ProjectCard({ project }: { project: Project }) {
             <button
               type="button"
               className={buttonClass("primary", "!px-4 !py-2")}
-              onClick={() => openChat()}
+              onClick={() => {
+                trackClick("try_chat");
+                openChat({ placement: "project_try_chat" });
+              }}
             >
               <MessageSquare aria-hidden="true" className="size-4" />
               Try the chat
@@ -95,7 +105,13 @@ function ProjectCard({ project }: { project: Project }) {
             <button
               type="button"
               className={buttonClass("primary", "!px-4 !py-2")}
-              onClick={() => openChat({ message: `I'd like a demo of the ${project.name}.` })}
+              onClick={() => {
+                trackClick("request_demo");
+                openChat({
+                  placement: "project_request_demo",
+                  message: `I'd like a demo of the ${project.name}.`,
+                });
+              }}
             >
               <MessageSquare aria-hidden="true" className="size-4" />
               Request a demo

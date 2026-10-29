@@ -3,6 +3,7 @@ import { AiSection } from "@/components/AiSection";
 import { Contact } from "@/components/Contact";
 import { Experience } from "@/components/Experience";
 import { Hero } from "@/components/Hero";
+import { SectionViewTracker } from "@/components/SectionViewTracker";
 import { Skills } from "@/components/Skills";
 import { StackMarquee } from "@/components/StackMarquee";
 import { Section } from "@/components/ui";
@@ -75,6 +76,7 @@ export default function Home() {
       </Section>
       <Skills />
       <Contact />
+      <SectionViewTracker />
     </>
   );
 }

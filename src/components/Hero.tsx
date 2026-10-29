@@ -115,7 +115,7 @@ export function Hero() {
               View my work
               <ArrowDown aria-hidden="true" className="size-4" />
             </ButtonLink>
-            <DownloadCvLink variant="secondary" />
+            <DownloadCvLink placement="hero" variant="secondary" />
           </div>
 
           <div className="text-muted mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">

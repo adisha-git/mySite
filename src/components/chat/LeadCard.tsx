@@ -1,7 +1,8 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { track } from "@/lib/analytics";
 import { chatConfig } from "@/lib/chat/config";
 import { leadFieldsSchema, type LeadFields } from "@/lib/chat/lead";
 
@@ -33,6 +34,8 @@ export function LeadCard({
   const [status, setStatus] = useState<Status>("editing");
   const [errors, setErrors] = useState<Partial<Record<keyof LeadFields, string>>>({});
   const [failure, setFailure] = useState<string | null>(null);
+  // Guards against a double click landing before the button re-renders as disabled.
+  const inFlight = useRef(false);
   const firstName = chatConfig.persona.subjectName.split(" ")[0];
 
   async function confirm() {
@@ -51,6 +54,8 @@ export function LeadCard({
       setFailure("This chat session isn't valid any more. Please use the contact form.");
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setStatus("sending");
     setFailure(null);
     try {
@@ -61,12 +66,18 @@ export function LeadCard({
       });
       if (res.ok) {
         setStatus("sent");
+        // Only once the server has saved the lead; never on a click, a validation error or a failure.
+        track("generate_lead", {
+          form_name: withJobDescription ? "chat_fit_check_lead" : "chat_lead",
+        });
         return;
       }
       const body = (await res.json().catch(() => ({}))) as { error?: string };
       setFailure(body.error ?? "Something went wrong. Please try again.");
     } catch {
       setFailure("Something went wrong. Please try again.");
+    } finally {
+      inFlight.current = false;
     }
     setStatus("editing");
   }

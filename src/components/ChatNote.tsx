@@ -25,7 +25,7 @@ export function ChatNote() {
       </dl>
       <button
         type="button"
-        onClick={() => openChat()}
+        onClick={() => openChat({ placement: "ai_section" })}
         className="border-accent/50 text-accent-text hover:bg-accent/10 mt-6 inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
       >
         <MessageSquare aria-hidden="true" className="size-4" />

@@ -1,4 +1,5 @@
 import { ArrowUpRight, CornerDownRight, Download } from "lucide-react";
+import { isProjectName, track } from "@/lib/analytics";
 import { stripCitations } from "@/lib/chat/citations";
 import type { ChatUIMessage } from "@/lib/chat/tools";
 import { FactCard } from "./FactCard";
@@ -45,7 +46,12 @@ function ToolPart({
     case "tool-downloadCv":
       if (part.state !== "output-available") return null;
       return (
-        <a href={part.output.url} download={part.output.fileName} className={actionClass}>
+        <a
+          href={part.output.url}
+          download={part.output.fileName}
+          onClick={() => track("cv_download_click", { placement: "chat" })}
+          className={actionClass}
+        >
           <Download aria-hidden="true" className="size-4" />
           Download CV (PDF)
         </a>
@@ -54,7 +60,18 @@ function ToolPart({
       if (part.state !== "output-available") return null;
       // A link the visitor clicks: browsers block tabs opened without a click.
       return (
-        <a href={part.output.url} target="_blank" rel="noopener noreferrer" className={actionClass}>
+        <a
+          href={part.output.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => {
+            const slug = part.input.project;
+            if (isProjectName(slug)) {
+              track("project_click", { project_name: slug, link_type: "chat_project_link" });
+            }
+          }}
+          className={actionClass}
+        >
           Open {part.output.name}
           <ArrowUpRight aria-hidden="true" className="size-4" />
           <span className="sr-only"> (opens in a new tab)</span>

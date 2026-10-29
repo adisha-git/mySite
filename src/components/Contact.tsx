@@ -93,7 +93,7 @@ export function Contact() {
             ) : null}
           </dl>
           <div className="border-line border-t pt-6">
-            <DownloadCvLink variant="secondary" />
+            <DownloadCvLink placement="contact" variant="secondary" />
           </div>
         </Reveal>
 

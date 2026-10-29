@@ -60,7 +60,7 @@ export function Footer() {
           <p className="text-muted mt-4 text-sm">
             Full experience, skills and education in one PDF.
           </p>
-          <DownloadCvLink className="mt-4" />
+          <DownloadCvLink placement="footer" className="mt-4" />
         </div>
       </div>
 

@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { track, type ChatPlacement } from "@/lib/analytics";
 import { OPEN_CHAT_EVENT, type OpenChatDetail } from "./open-chat";
 
 // None of the chat code (AI SDK, Markdown) loads until the visitor opens the panel.
@@ -14,21 +15,31 @@ export function ChatLauncher({ label, assistantName }: { label: string; assistan
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
+  // Mirrors `open` synchronously, so chat_open fires only on a closed → open change.
+  const openRef = useRef(false);
 
-  const show = useCallback((message?: string) => {
+  const show = useCallback((placement: ChatPlacement, message?: string) => {
     if (message) setPending(message);
     setLoaded(true);
     setOpen(true);
+    if (!openRef.current) {
+      openRef.current = true;
+      track("chat_open", { placement });
+    }
   }, []);
 
   const close = useCallback(() => {
+    openRef.current = false;
     setOpen(false);
     // The launcher is hidden while the panel is open; focus it once it's back.
     requestAnimationFrame(() => launcherRef.current?.focus());
   }, []);
 
   useEffect(() => {
-    const onOpen = (e: Event) => show((e as CustomEvent<OpenChatDetail>).detail?.message);
+    const onOpen = (e: Event) => {
+      const detail = (e as CustomEvent<OpenChatDetail>).detail;
+      show(detail.placement, detail.message);
+    };
     window.addEventListener(OPEN_CHAT_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
   }, [show]);
@@ -38,7 +49,7 @@ export function ChatLauncher({ label, assistantName }: { label: string; assistan
       <button
         ref={launcherRef}
         type="button"
-        onClick={() => show()}
+        onClick={() => show("floating_launcher")}
         // Start fetching the panel as soon as the visitor shows intent.
         onPointerEnter={() => void loadPanel()}
         onFocus={() => void loadPanel()}

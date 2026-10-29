@@ -4,6 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { ArrowUp, RotateCcw, Square, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { trackChatStart } from "@/lib/analytics";
 import { chatConfig, type ChatStarter } from "@/lib/chat/config";
 import { MIN_JD_CHARS, type FitCheckResponse } from "@/lib/chat/fit";
 import { MAX_JD_CHARS, MAX_MESSAGE_CHARS, MAX_MESSAGES } from "@/lib/chat/limits";
@@ -202,6 +203,11 @@ export function ChatPanel({
     if (!atLimit) void sendMessage({ text: pendingMessage }, requestOptions("chat"));
     onPendingSent();
   }, [pendingMessage, busy, botCheckReady, atLimit, sendMessage, requestOptions, onPendingSent]);
+
+  // A conversation id arrives only once the server has accepted the first message
+  // (passed the bot check and limits), so failed sends and retries don't count.
+  const conversationId = conversationOf(messages).conversationId;
+  useEffect(() => trackChatStart(conversationId), [conversationId]);
 
   // Run scrollToSection once, when its result arrives.
   useEffect(() => {

@@ -107,7 +107,7 @@ export function Nav() {
         </ul>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          <DownloadCvLink className="hidden !px-4 !py-2 sm:inline-flex" />
+          <DownloadCvLink placement="nav" className="hidden !px-4 !py-2 sm:inline-flex" />
           <ThemeToggle />
           <button
             type="button"
@@ -169,7 +169,7 @@ export function Nav() {
                 </m.li>
               ))}
               <li className="pt-4">
-                <DownloadCvLink className="w-full" />
+                <DownloadCvLink placement="nav_mobile_menu" className="w-full" />
               </li>
             </ul>
           </m.div>

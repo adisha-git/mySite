@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2, Loader2, Send } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useForm, type FieldError } from "react-hook-form";
 import { enquiryTypes } from "@/data/profile";
+import { track } from "@/lib/analytics";
 import { contactSchema, type ContactInput } from "@/lib/contact-schema";
 import { PREFILL_EVENT, type ContactPrefill } from "./contact-prefill";
 import { buttonClass } from "./ui";
@@ -142,6 +143,7 @@ export function ContactForm() {
       reset(defaults);
       lastAttempt.current = null;
       setStatus({ state: "success" });
+      track("generate_lead", { form_name: "contact_form" });
     } catch {
       setStatus({
         state: "error",
