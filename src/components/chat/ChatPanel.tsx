@@ -5,6 +5,7 @@ import { DefaultChatTransport } from "ai";
 import { ArrowUp, RotateCcw, Square, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatConfig, type ChatStarter } from "@/lib/chat/config";
+import { MIN_JD_CHARS, type FitCheckResponse } from "@/lib/chat/fit";
 import { MAX_JD_CHARS, MAX_MESSAGE_CHARS, MAX_MESSAGES } from "@/lib/chat/limits";
 import type { ChatUIMessage } from "@/lib/chat/tools";
 import { MessageList } from "./MessageList";
@@ -13,6 +14,11 @@ import { StarterChips } from "./StarterChips";
 import { useTurnstile } from "./useTurnstile";
 
 const DEFAULT_PLACEHOLDER = `Ask about ${chatConfig.persona.subjectName.split(" ")[0]}…`;
+const JD_PLACEHOLDER =
+  chatConfig.starters.find((s) => s.mode === "jd")?.placeholder ??
+  "Paste the job description here…";
+/** A paste this long is almost certainly a job description, so it goes to the fit check. */
+const LONG_PASTE_CHARS = 800;
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -38,6 +44,9 @@ function errorText(error: Error) {
   return "Something went wrong. Please try again.";
 }
 
+type FitState =
+  { status: "idle" | "checking" } | { status: "error"; message: string; jobDescription: string };
+
 export function ChatPanel({
   open,
   onClose,
@@ -60,6 +69,7 @@ export function ChatPanel({
   const [jdMode, setJdMode] = useState(false);
   const lastMode = useRef<"chat" | "jd">("chat");
   const sentBotCheck = useRef(false);
+  const [fit, setFit] = useState<FitState>({ status: "idle" });
 
   const turnstile = useTurnstile(turnstileRef, open);
   const { take: takeToken, reset: resetBotCheck } = turnstile;
@@ -74,15 +84,17 @@ export function ChatPanel({
       }),
     [],
   );
-  const { messages, sendMessage, status, stop, error, regenerate } = useChat<ChatUIMessage>({
-    transport,
-    // Tokens are single-use: if the request that used one failed, fetch a new one for the retry.
-    onError: () => {
-      if (sentBotCheck.current) resetBotCheck();
-    },
-  });
+  const { messages, setMessages, sendMessage, status, stop, error, regenerate } =
+    useChat<ChatUIMessage>({
+      transport,
+      // Tokens are single-use: if the request that used one failed, fetch a new one for the retry.
+      onError: () => {
+        if (sentBotCheck.current) resetBotCheck();
+      },
+    });
 
-  const busy = status === "submitted" || status === "streaming";
+  const checkingFit = fit.status === "checking";
+  const busy = status === "submitted" || status === "streaming" || checkingFit;
   const atLimit = messages.length + 1 > MAX_MESSAGES;
   const needsBotCheck = !conversationOf(messages).conversationId;
   const botCheckReady = !needsBotCheck || turnstile.state === "ready";
@@ -98,19 +110,82 @@ export function ChatPanel({
     [needsBotCheck, takeToken],
   );
 
+  /**
+   * Sends a job description to the fit check and shows the result as a card.
+   * The visitor's message is added once; a retry only repeats the request.
+   */
+  const checkFit = useCallback(
+    async (jobDescription: string, { retry = false } = {}) => {
+      const { turnstileToken } = requestOptions("jd").body;
+      if (!retry) {
+        setMessages((current) => [
+          ...current,
+          {
+            id: crypto.randomUUID(),
+            role: "user",
+            parts: [{ type: "text", text: jobDescription }],
+          },
+        ]);
+      }
+      setFit({ status: "checking" });
+      const failed = (message: string) => {
+        // Tokens are single-use: fetch a new one for the retry.
+        if (sentBotCheck.current) resetBotCheck();
+        setFit({ status: "error", message, jobDescription });
+      };
+      try {
+        const res = await fetch("/api/fit-check", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ jobDescription, ...conversationOf(messages), turnstileToken }),
+        });
+        const body = (await res.json().catch(() => ({}))) as Partial<FitCheckResponse> & {
+          error?: string;
+        };
+        if (!res.ok || !body.fit || !body.conversationId) {
+          failed(body.error ?? "Something went wrong. Please try again.");
+          return;
+        }
+        const { conversationId, conversationToken } = body;
+        setMessages((current) => [
+          ...current,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            metadata: { conversationId, conversationToken },
+            parts: [{ type: "data-fit", data: body.fit! }],
+          },
+        ]);
+        setFit({ status: "idle" });
+      } catch {
+        failed("Something went wrong. Please try again.");
+      }
+    },
+    [messages, requestOptions, resetBotCheck, setMessages],
+  );
+
   const send = useCallback(
     (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || busy || atLimit || !botCheckReady) return;
-      void sendMessage({ text: trimmed }, requestOptions(jdMode ? "jd" : "chat"));
+      // Too short to be a job description: answer it as a question.
+      if (jdMode && trimmed.length >= MIN_JD_CHARS) void checkFit(trimmed);
+      else void sendMessage({ text: trimmed }, requestOptions(jdMode ? "jd" : "chat"));
       setInput("");
       setPlaceholder(DEFAULT_PLACEHOLDER);
       setJdMode(false);
       // A starter chip disappears once clicked; keep focus inside the dialog.
       inputRef.current?.focus();
     },
-    [busy, atLimit, botCheckReady, jdMode, sendMessage, requestOptions],
+    [busy, atLimit, botCheckReady, jdMode, checkFit, sendMessage, requestOptions],
   );
+
+  function leaveJdMode() {
+    setJdMode(false);
+    setPlaceholder(DEFAULT_PLACEHOLDER);
+    setInput((current) => current.slice(0, MAX_MESSAGE_CHARS));
+    inputRef.current?.focus();
+  }
 
   // On a phone the panel covers the page, so close it before scrolling there.
   const goToSection = useCallback(
@@ -146,7 +221,7 @@ export function ChatPanel({
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
-  }, [messages, status]);
+  }, [messages, status, fit.status]);
 
   // Full-screen on phones: stop the page behind from scrolling.
   useEffect(() => {
@@ -245,7 +320,13 @@ export function ChatPanel({
         ) : (
           <MessageList
             messages={messages}
-            thinking={status === "submitted"}
+            thinking={
+              status === "submitted"
+                ? "thinking…"
+                : checkingFit
+                  ? "checking the job description against his experience…"
+                  : null
+            }
             onSection={goToSection}
           />
         )}
@@ -258,6 +339,23 @@ export function ChatPanel({
             <button
               type="button"
               onClick={() => void regenerate(requestOptions(lastMode.current))}
+              disabled={!botCheckReady}
+              className="text-accent-text mt-2 inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
+            >
+              <RotateCcw aria-hidden="true" className="size-4" />
+              Retry
+            </button>
+          </div>
+        ) : null}
+        {fit.status === "error" ? (
+          <div
+            role="alert"
+            className="mt-4 rounded-md border border-red-500/40 bg-red-500/10 p-3 text-sm"
+          >
+            <p>{fit.message}</p>
+            <button
+              type="button"
+              onClick={() => void checkFit(fit.jobDescription, { retry: true })}
               disabled={!botCheckReady}
               className="text-accent-text mt-2 inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
             >
@@ -290,54 +388,79 @@ export function ChatPanel({
             to reach {chatConfig.persona.subjectName.split(" ")[0]} directly.
           </p>
         ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(input);
-            }}
-            className="flex items-end gap-2"
-          >
-            <label htmlFor="chat-input" className="sr-only">
-              Your question
-            </label>
-            <textarea
-              id="chat-input"
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                // Enter sends; Shift+Enter adds a new line.
-                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  send(input);
-                }
+          <>
+            {jdMode ? (
+              <p className="text-muted mb-2 text-xs">
+                Paste a job description to check {chatConfig.persona.subjectName.split(" ")[0]}
+                &apos;s fit against it.{" "}
+                <button
+                  type="button"
+                  onClick={leaveJdMode}
+                  className="text-accent-text underline underline-offset-4"
+                >
+                  Ask a question instead
+                </button>
+              </p>
+            ) : null}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                send(input);
               }}
-              placeholder={placeholder}
-              maxLength={maxChars}
-              rows={jdMode ? 6 : 1}
-              aria-describedby={remaining < 200 ? "chat-remaining" : undefined}
-              className="bg-surface border-line text-ink placeholder:text-muted focus:border-accent max-h-40 min-h-11 flex-1 resize-none rounded-lg border px-3 py-2.5 text-base outline-none sm:text-sm"
-            />
-            {busy ? (
-              <button
-                type="button"
-                onClick={() => void stop()}
-                aria-label="Stop generating"
-                className="border-line text-ink hover:border-accent flex size-11 shrink-0 items-center justify-center rounded-lg border transition-colors"
-              >
-                <Square aria-hidden="true" className="size-4 fill-current" />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                aria-label="Send"
-                disabled={!input.trim() || !botCheckReady}
-                className="bg-accent text-on-accent flex size-11 shrink-0 items-center justify-center rounded-lg transition-opacity disabled:opacity-40"
-              >
-                <ArrowUp aria-hidden="true" className="size-5" />
-              </button>
-            )}
-          </form>
+              className="flex items-end gap-2"
+            >
+              <label htmlFor="chat-input" className="sr-only">
+                Your question
+              </label>
+              <textarea
+                id="chat-input"
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onPaste={(e) => {
+                  if (jdMode) return;
+                  const pasted = e.clipboardData.getData("text");
+                  if (pasted.length < LONG_PASTE_CHARS) return;
+                  // Switch before the paste lands, or the 2,000-character limit would cut it.
+                  e.preventDefault();
+                  setJdMode(true);
+                  setPlaceholder(JD_PLACEHOLDER);
+                  setInput((current) => (current + pasted).slice(0, MAX_JD_CHARS));
+                }}
+                onKeyDown={(e) => {
+                  // Enter sends; Shift+Enter adds a new line.
+                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    send(input);
+                  }
+                }}
+                placeholder={placeholder}
+                maxLength={maxChars}
+                rows={jdMode ? 6 : 1}
+                aria-describedby={remaining < 200 ? "chat-remaining" : undefined}
+                className="bg-surface border-line text-ink placeholder:text-muted focus:border-accent max-h-40 min-h-11 flex-1 resize-none rounded-lg border px-3 py-2.5 text-base outline-none sm:text-sm"
+              />
+              {busy ? (
+                <button
+                  type="button"
+                  onClick={() => void stop()}
+                  aria-label="Stop generating"
+                  className="border-line text-ink hover:border-accent flex size-11 shrink-0 items-center justify-center rounded-lg border transition-colors"
+                >
+                  <Square aria-hidden="true" className="size-4 fill-current" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  aria-label="Send"
+                  disabled={!input.trim() || !botCheckReady}
+                  className="bg-accent text-on-accent flex size-11 shrink-0 items-center justify-center rounded-lg transition-opacity disabled:opacity-40"
+                >
+                  <ArrowUp aria-hidden="true" className="size-5" />
+                </button>
+              )}
+            </form>
+          </>
         )}
         {remaining < 200 && !atLimit ? (
           <p id="chat-remaining" className="text-muted mt-1 text-xs">

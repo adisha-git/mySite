@@ -1,4 +1,4 @@
-import { cosineDistance, desc, sql } from "drizzle-orm";
+import { asc, cosineDistance, desc, sql } from "drizzle-orm";
 import { getDb } from "./db/client";
 import { chunks } from "./db/schema";
 import { embedQuery } from "./embed";
@@ -35,9 +35,13 @@ const columns = {
   content: chunks.content,
 };
 
-/** Hybrid search: vector top 8 + full-text top 8, merged with RRF, best `limit` kept. */
+/**
+ * Hybrid search: vector top 8 + full-text top 8 (or `limit`, if larger), merged
+ * with RRF, best `limit` kept.
+ */
 export async function retrieve(query: string, { limit = 6 } = {}): Promise<RetrievedChunk[]> {
   const db = getDb();
+  const perList = Math.max(PER_LIST, limit);
   const tsQuery = sql`websearch_to_tsquery('english', ${query})`;
 
   const [vectorRows, textRows] = await Promise.all([
@@ -46,18 +50,26 @@ export async function retrieve(query: string, { limit = 6 } = {}): Promise<Retri
         .select(columns)
         .from(chunks)
         .orderBy(cosineDistance(chunks.embedding, embedding))
-        .limit(PER_LIST),
+        .limit(perList),
     ),
     db
       .select(columns)
       .from(chunks)
       .where(sql`${chunks.tsv} @@ ${tsQuery}`)
       .orderBy(desc(sql`ts_rank(${chunks.tsv}, ${tsQuery})`))
-      .limit(PER_LIST),
+      .limit(perList),
   ]);
 
   const byId = new Map([...vectorRows, ...textRows].map((row) => [row.id, row]));
   return reciprocalRankFusion([vectorRows.map((r) => r.id), textRows.map((r) => r.id)])
     .slice(0, limit)
     .map((id) => byId.get(id)!);
+}
+
+/** Every chunk, in a fixed order (so a prompt built from them can be cached). */
+export async function allChunks(): Promise<RetrievedChunk[]> {
+  return getDb()
+    .select(columns)
+    .from(chunks)
+    .orderBy(asc(chunks.sourcePath), asc(chunks.headingPath), asc(chunks.id));
 }

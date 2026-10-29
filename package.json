@@ -16,6 +16,7 @@
     "db:migrate": "drizzle-kit migrate",
     "ingest": "tsx scripts/ingest.ts",
     "evals": "tsx evals/run.ts",
+    "evals:fit": "tsx evals/fit.ts",
     "chat:smoke": "tsx scripts/chat-smoke.ts"
   },
   "dependencies": {

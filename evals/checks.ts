@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { stripCitations } from "../src/lib/chat/citations";
+import { FACT_LEAD_INS } from "../src/lib/chat/fact-step";
 import { facts as allFacts, type Fact } from "../src/lib/chat/facts";
 
 /** Deterministic answer checks for evals/run.ts (the groundedness judge runs separately). */
@@ -24,6 +25,8 @@ export const questionSchema = z.object({
   notTools: z.array(z.string()).default([]),
   /** Fact ids the answer must show as a fact card. */
   facts: z.array(z.string()).default([]),
+  /** Qualifiers to keep: if the answer mentions `when`, it must also say `must`. */
+  keep: z.array(z.object({ when: z.string(), must: z.string() })).default([]),
 });
 export type Question = z.infer<typeof questionSchema>;
 
@@ -78,18 +81,60 @@ export function repeats(text: string): string[] {
 }
 
 /**
- * Facts the "writes out" check skips: the prompt requires pointing visitors to
- * "the contact form on adishamadhushanka.com.au", which is also the contact
- * fact's wording, and each role file gives that employer's dates, which the
- * employers fact lists too.
+ * The "writes out" check skips the contact fact: the prompt requires pointing
+ * visitors to "the contact form on adishamadhushanka.com.au", which is also
+ * that fact's wording.
  */
-const WRITE_OUT_EXEMPT = new Set(["contact", "employers"]);
+const WRITE_OUT_EXEMPT = new Set(["contact"]);
+
+/**
+ * Facts that are lists, one item per "; ". Each role file gives that employer's
+ * dates, so quoting one item is fine; writing out two or more is writing out the list.
+ */
+const LIST_FACTS = new Set(["employers"]);
+
+/** True if `text` writes out `fact`: for a list fact, two or more of its items. */
+export function writesOut(text: string, fact: Fact): boolean {
+  if (!LIST_FACTS.has(fact.id)) return sharesRun(text, fact.text);
+  const items = fact.text.replace(/^[^:]*:\s*/, "").split(/;\s*/);
+  return items.filter((item) => sharesRun(text, item)).length >= 2;
+}
+
+/**
+ * Words that generalise or rank ("never updated", "mainly React", "his clearest
+ * example"). The answer may use one only if the material it drew on uses it too.
+ */
+const ABSOLUTES = [
+  "never",
+  "always",
+  "mainly",
+  "mostly",
+  "primarily",
+  "solely",
+  "entirely",
+  "clearest",
+  "biggest",
+  "greatest",
+];
+
+/** Absolute words in `text` that `reference` doesn't use. */
+export function unsupportedAbsolutes(text: string, reference: string): string[] {
+  const has = (t: string, word: string) => new RegExp(`\\b${word}\\b`, "i").test(t);
+  return ABSOLUTES.filter((word) => has(text, word) && !has(reference, word));
+}
 
 /** Every deterministic check; returns one message per failure. */
 export function checkAnswer(
   q: Question,
   answer: EvalAnswer,
-  facts: readonly Fact[] = allFacts,
+  {
+    facts = allFacts,
+    reference,
+  }: {
+    facts?: readonly Fact[];
+    /** The fixed facts and the sources the answer cited, for the absolute-words check. */
+    reference?: string;
+  } = {},
 ): string[] {
   const failures: string[] = [];
   const visible = visibleAnswer(answer);
@@ -97,6 +142,11 @@ export function checkAnswer(
 
   for (const item of q.must) if (!matches(visible, item)) failures.push(`missing "${item}"`);
   for (const item of q.mustNot) if (matches(visible, item)) failures.push(`contains "${item}"`);
+  for (const { when, must } of q.keep) {
+    if (matches(visible, when) && !matches(visible, must)) {
+      failures.push(`mentions "${when}" without its qualifier "${must}"`);
+    }
+  }
   if (q.tool && !answer.tools.includes(q.tool)) failures.push(`tool ${q.tool} not called`);
   for (const tool of q.notTools) {
     if (answer.tools.includes(tool)) failures.push(`unrequested tool ${tool} called`);
@@ -113,10 +163,16 @@ export function checkAnswer(
   }
   for (const fact of facts) {
     if (WRITE_OUT_EXEMPT.has(fact.id)) continue;
-    if (sharesRun(text, fact.text)) failures.push(`text writes out fact "${fact.id}"`);
+    if (writesOut(text, fact)) failures.push(`text writes out fact "${fact.id}"`);
   }
-  if (answer.facts.length && text && !/[.!?…:)"”'’]$/.test(text)) {
-    failures.push("text before the fact card ends mid-sentence");
+  // The server replaces a fact-card reply's text with the tool's lead-in.
+  if (answer.facts.length && text && !(FACT_LEAD_INS as readonly string[]).includes(text)) {
+    failures.push(`text alongside the fact card isn't a lead-in: "${text.slice(0, 80)}"`);
+  }
+  if (reference !== undefined) {
+    for (const word of unsupportedAbsolutes(text, reference)) {
+      failures.push(`says "${word}", which its sources don't`);
+    }
   }
 
   for (const repeat of repeats(visible)) failures.push(`repeated text: "${repeat}"`);

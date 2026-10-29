@@ -38,6 +38,6 @@ His guideline is to use company-approved tools, keep confidential code and crede
 
 ## Mentoring
 
-At Singapore Airlines and OCBC, Adisha regularly mentored fellow developers. Alongside code reviews, he held a meeting every sprint to find bottlenecks in the developers' assigned work and discuss where they needed technical guidance.
+Adisha mentors developers in several ways at once: pull-request reviews in which he explains the reasoning behind each suggestion, a PR review checklist the team can refer to, a meeting every sprint to find bottlenecks in the developers' assigned work and discuss where they need technical guidance, and practical examples from the developers' own code that help them strengthen their technical judgement and problem-solving skills.
 
-His approach makes mentoring part of the everyday development process. He uses practical examples from the developers' own code to help them strengthen their technical judgement and problem-solving skills.
+He regularly mentored fellow developers this way at Singapore Airlines and OCBC, making mentoring part of the everyday development process.

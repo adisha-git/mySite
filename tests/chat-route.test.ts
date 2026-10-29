@@ -337,6 +337,41 @@ describe("POST /api/chat", () => {
       );
     });
 
+    it("resends an earlier fit card to the model as text", async () => {
+      const conversationId = "0b8f5c1e-2d3a-4c5b-8e9f-112233445566";
+      const fit = {
+        role: "Senior Frontend Engineer",
+        matched: [
+          {
+            requirement: "React",
+            evidence: [{ label: "OCBC Bank", quote: "in React", path: "p", heading: "h" }],
+          },
+        ],
+        partial: [],
+        gaps: ["Kubernetes"],
+        summary: "A strong React match.",
+      };
+      const res = await POST(
+        post({
+          conversationId,
+          conversationToken: signConversation(conversationId, SALT),
+          messages: [
+            userMessage("x".repeat(500)),
+            { id: "a", role: "assistant", parts: [{ type: "data-fit", data: fit }] },
+            { ...userMessage("Tell me more about the React work"), id: "m2" },
+          ],
+        }),
+      );
+      expect(res.status).toBe(200);
+      const call = (streamText.mock.calls[0] as unknown[])[0] as {
+        messages: { role: string; content: string }[];
+      };
+      expect(call.messages[1]).toEqual({
+        role: "assistant",
+        content: expect.stringContaining("Not shown in his written experience: Kubernetes."),
+      });
+    });
+
     it("accepts a job description pasted earlier in the history", async () => {
       const conversationId = "0b8f5c1e-2d3a-4c5b-8e9f-112233445566";
       const res = await POST(
@@ -354,13 +389,16 @@ describe("POST /api/chat", () => {
     });
   });
 
-  it("ends the answer at a fact card and only offers the actions the visitor asked for", async () => {
+  it("ends the answer at any tool call and only offers the actions the visitor asked for", async () => {
     await POST(post({ messages: [userMessage("What is HeyKitty?")] }));
     const call = (streamText.mock.calls[0] as unknown[])[0] as {
-      stopWhen: unknown[];
+      stopWhen: (options: { steps: unknown[] }) => boolean | PromiseLike<boolean>;
+      experimental_transform: unknown;
       activeTools: string[];
     };
-    expect(call.stopWhen).toHaveLength(2);
+    // One step: a tool call can't be followed by more text that repeats the answer.
+    expect(await call.stopWhen({ steps: [{}] })).toBe(true);
+    expect(call.experimental_transform).toBeTypeOf("function");
     expect(call.activeTools).toEqual(expect.arrayContaining(["showFacts", "captureLead"]));
     expect(call.activeTools).not.toContain("openProject");
   });

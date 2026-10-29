@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { facts } from "@/lib/chat/facts";
-import { checkAnswer, questionSchema, repeats, type CardFact } from "../evals/checks";
+import {
+  checkAnswer,
+  questionSchema,
+  repeats,
+  unsupportedAbsolutes,
+  type CardFact,
+} from "../evals/checks";
 
 const card = (id: string): CardFact => {
   const f = facts.find((x) => x.id === id)!;
@@ -56,7 +62,36 @@ describe("eval checks for fixed facts", () => {
       tools: ["showFacts"],
       facts: [card("experience")],
     });
-    expect(failures).toContain("text before the fact card ends mid-sentence");
+    expect(failures).toContain('text alongside the fact card isn\'t a lead-in: "Yes, he has"');
+  });
+
+  it("fails any text beside a fact card other than the lead-in", () => {
+    const failures = checkAnswer(relocation, {
+      text: "Yes, he would consider it.\n\n[[sources: none]]",
+      tools: ["showFacts"],
+      facts: [card("relocation")],
+    });
+    expect(failures).toContain(
+      'text alongside the fact card isn\'t a lead-in: "Yes, he would consider it."',
+    );
+  });
+
+  it("allows one employer's dates but fails writing out the employer list", () => {
+    const q = question({ category: "experience" });
+    expect(
+      checkAnswer(q, {
+        text: "He worked at DBS Bank, Singapore (October 2019 – March 2020) on the digital banking platform.",
+        tools: [],
+        facts: [],
+      }),
+    ).toEqual([]);
+    expect(
+      checkAnswer(q, {
+        text: "No. His employers are MindLogics Limited, Oversea-Chinese Banking Corporation (OCBC), Singapore Airlines through ITCAN Pte Ltd, DBS Bank and others.",
+        tools: ["showFacts"],
+        facts: [card("employers")],
+      }),
+    ).toContain('text writes out fact "employers"');
   });
 
   it("fails text that repeats the fact shown in the card", () => {
@@ -83,6 +118,54 @@ describe("eval checks for fixed facts", () => {
     expect(
       repeats("He is based in Brisbane, Queensland. He is based in Brisbane, Queensland."),
     ).toHaveLength(1);
+  });
+});
+
+describe("eval checks for overstatement", () => {
+  it("fails an absolute word the sources don't use", () => {
+    const reference =
+      "If the page rendered first, the label didn't update when the status came back.";
+    expect(unsupportedAbsolutes("The label never updated.", reference)).toEqual(["never"]);
+    expect(unsupportedAbsolutes("The label didn't update.", reference)).toEqual([]);
+    expect(unsupportedAbsolutes("He never misses a review.", "He never skips reviews.")).toEqual(
+      [],
+    );
+  });
+
+  it("reports it as a failure when checking an answer against its sources", () => {
+    const q = question({ category: "behavioural" });
+    expect(
+      checkAnswer(
+        q,
+        { text: "He mainly works in React.\n\n[[sources: 1]]", tools: [], facts: [] },
+        { reference: "He works in React and Angular." },
+      ),
+    ).toContain('says "mainly", which its sources don\'t');
+  });
+});
+
+describe("eval checks for qualifiers", () => {
+  const q = question({
+    category: "projects",
+    keep: [{ when: "80%", must: "relevant component" }],
+  });
+
+  it("fails a detail that drops the source's qualifier", () => {
+    expect(
+      checkAnswer(q, { text: "Coverage gates: 80% at Singapore Airlines.", tools: [], facts: [] }),
+    ).toContain('mentions "80%" without its qualifier "relevant component"');
+  });
+
+  it("passes the detail with its qualifier, or an answer that doesn't mention it", () => {
+    const scoped = "Coverage gates: 80% for the relevant component at Singapore Airlines.";
+    expect(checkAnswer(q, { text: scoped, tools: [], facts: [] })).toEqual([]);
+    expect(checkAnswer(q, { text: "He uses Jest.", tools: [], facts: [] })).toEqual([]);
+  });
+
+  it("fails a ranking of his stories the sources don't make", () => {
+    expect(unsupportedAbsolutes("His clearest example is at ISE.", "At ISE, he chose…")).toEqual([
+      "clearest",
+    ]);
   });
 });
 

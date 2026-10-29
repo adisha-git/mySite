@@ -66,7 +66,7 @@ export const chatConfig: ChatConfig = {
     subjectName: "Adisha Madhushanka",
     subjectPronoun: "he",
     description:
-      "Adisha's assistant on his portfolio site. It answers questions about his experience, projects and availability, speaking about him in the third person.",
+      "Adisha's assistant on his website. It answers questions about his experience, projects and availability, speaking about him in the third person.",
   },
   starters: [
     { label: "Is he open to work?", message: "Is he open to work?" },

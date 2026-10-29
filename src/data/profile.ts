@@ -170,6 +170,40 @@ export const profile = {
       { title: "Generate", detail: "LLM answers from that context" },
       { title: "Evaluate", detail: "Check accuracy and iterate" },
     ],
+    /** "How this chat works": the site's own chat, step by step through the pipeline above. */
+    chatNote: {
+      title: "How this chat works",
+      intro:
+        "The “Ask about Adisha” chat on this site is built on this pipeline, with the same steps:",
+      steps: [
+        {
+          step: "Ingest",
+          detail:
+            "Markdown files about my work are split by heading and embedded with Voyage AI into Postgres with pgvector. Only changed chunks are re-embedded on deploy.",
+        },
+        {
+          step: "Retrieve",
+          detail:
+            "Each question runs a vector search and a full-text search, merged with reciprocal rank fusion.",
+        },
+        {
+          step: "Augment",
+          detail:
+            "The prompt holds only the retrieved chunks and a set of fixed facts, which are shown word for word rather than rephrased.",
+        },
+        {
+          step: "Generate",
+          detail:
+            "Claude Haiku answers from that context and lists its sources. A pasted job description goes to Claude Sonnet, and a match only counts if it quotes my own write-ups.",
+        },
+        {
+          step: "Evaluate",
+          detail:
+            "A 50-question suite checks the answers for required facts and groundedness, with Claude as the judge, before prompt changes are merged.",
+        },
+      ],
+      cta: "Ask the chat",
+    },
     principles: [
       "AI speeds up the work — code review, tests and security standards stay exactly the same.",
       "Answers grounded in your data, not the model's guesses.",

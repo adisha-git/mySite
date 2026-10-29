@@ -1,0 +1,298 @@
+{
+  "ranAt": "2026-10-29T06:03:01.494Z",
+  "baseUrl": "http://localhost:3000",
+  "passed": 3,
+  "results": [
+    {
+      "id": "senior-frontend",
+      "passed": true,
+      "failures": [],
+      "seconds": 11.731,
+      "fit": {
+        "role": "Senior Frontend Engineer",
+        "matched": [
+          {
+            "requirement": "React and TypeScript",
+            "evidence": [
+              {
+                "label": "Singapore Airlines — Senior Software Engineer (React JS)",
+                "quote": "The stack included React, TypeScript, JavaScript, Redux, the Context API, Material UI, Storybook, Node.js and AWS.",
+                "path": "content/knowledge/roles/singapore-airlines.md",
+                "heading": "Singapore Airlines — Senior Software Engineer (React JS) > Team and setup; Shared React component library; What I'm proud of; Mentoring and leadership; What I learned; Why I moved on"
+              },
+              {
+                "label": "MindLogics Limited — Senior Software Engineer",
+                "quote": "Adisha worked on a Visa Workflow Management System built with TypeScript and React.js.",
+                "path": "content/knowledge/roles/mindlogics.md",
+                "heading": "MindLogics Limited — Senior Software Engineer > About MindLogics; What I owned"
+              }
+            ]
+          },
+          {
+            "requirement": "Frontend architecture ownership",
+            "evidence": [
+              {
+                "label": "OCBC Bank — Senior Software Engineer (AVP)",
+                "quote": "Adisha led frontend architecture and technical decision-making for an internal front-office banking application that helps relationship managers manage client portfolios.",
+                "path": "content/knowledge/roles/ocbc.md",
+                "heading": "OCBC Bank — Senior Software Engineer (AVP) > What I owned; Team and setup; Frontend practices and tooling; Mentoring and leadership; What I learned"
+              }
+            ]
+          },
+          {
+            "requirement": "Banking or regulated industry experience",
+            "evidence": [
+              {
+                "label": "OCBC Bank — Senior Software Engineer (AVP)",
+                "quote": "He designed and implemented React applications integrated with Java Spring Boot microservices, in a secure, high-availability banking environment.",
+                "path": "content/knowledge/roles/ocbc.md",
+                "heading": "OCBC Bank — Senior Software Engineer (AVP) > What I owned; Team and setup; Frontend practices and tooling; Mentoring and leadership; What I learned"
+              },
+              {
+                "label": "DBS Bank — React JS Developer",
+                "quote": "Adisha contributed to the development and maintenance of the DBS digibank platform, which supports secure account management, fund transfers and bill payments.",
+                "path": "content/knowledge/roles/dbs.md",
+                "heading": "DBS Bank — React JS Developer > What I owned; Team and setup"
+              }
+            ]
+          },
+          {
+            "requirement": "Code reviews and mentoring",
+            "evidence": [
+              {
+                "label": "OCBC Bank — Senior Software Engineer (AVP)",
+                "quote": "As technical lead, Adisha mentored junior and mid-level engineers through structured code reviews, architectural guidance and knowledge sharing.",
+                "path": "content/knowledge/roles/ocbc.md",
+                "heading": "OCBC Bank — Senior Software Engineer (AVP) > What I owned; Team and setup; Frontend practices and tooling; Mentoring and leadership; What I learned"
+              }
+            ]
+          },
+          {
+            "requirement": "Automated testing with Jest and React Testing Library",
+            "evidence": [
+              {
+                "label": "Adisha Madhushanka — How he works",
+                "quote": "At Singapore Airlines and OCBC, he used Jest and React Testing Library to write unit tests, mock API responses, and cover component behaviour and edge cases.",
+                "path": "content/knowledge/how-i-work.md",
+                "heading": "Adisha Madhushanka — How he works > Code review; Testing"
+              }
+            ]
+          },
+          {
+            "requirement": "Australian working rights",
+            "evidence": [
+              {
+                "label": "Adisha Madhushanka — Key facts",
+                "quote": "Adisha holds unrestricted Australian working rights. He does not need visa sponsorship to work in Australia.",
+                "path": "content/knowledge/facts.md",
+                "heading": "Adisha Madhushanka — Key facts > Work rights; Location; Relocation; Role types"
+              }
+            ]
+          },
+          {
+            "requirement": "Brisbane, hybrid",
+            "evidence": [
+              {
+                "label": "Adisha Madhushanka — Key facts",
+                "quote": "Adisha is based in Brisbane, Queensland, Australia.",
+                "path": "content/knowledge/facts.md",
+                "heading": "Adisha Madhushanka — Key facts > Work rights; Location; Relocation; Role types"
+              },
+              {
+                "label": "Adisha Madhushanka — Key facts",
+                "quote": "Adisha is open to remote, hybrid and fully on-site work.",
+                "path": "content/knowledge/facts.md",
+                "heading": "Adisha Madhushanka — Key facts > Work rights; Location; Relocation; Role types"
+              }
+            ]
+          }
+        ],
+        "partial": [
+          {
+            "requirement": "Frontend development experience",
+            "evidence": [
+              {
+                "label": "Key facts",
+                "quote": "Adisha has 10+ years of experience delivering large-scale web applications across banking, aviation, telecommunications and enterprise environments.",
+                "path": "facts",
+                "heading": "Experience"
+              }
+            ]
+          },
+          {
+            "requirement": "Accessibility",
+            "evidence": [
+              {
+                "label": "Adisha Madhushanka — How he works",
+                "quote": "Accessibility is part of how Adisha builds and reviews frontend components. He uses WCAG as a reference and follows each project's accessibility requirements.",
+                "path": "content/knowledge/how-i-work.md",
+                "heading": "Adisha Madhushanka — How he works > Accessibility"
+              }
+            ]
+          },
+          {
+            "requirement": "REST API design",
+            "evidence": [
+              {
+                "label": "MindLogics Limited — Senior Software Engineer",
+                "quote": "He built reusable React components and integrated frontend applications with RESTful APIs.",
+                "path": "content/knowledge/roles/mindlogics.md",
+                "heading": "MindLogics Limited — Senior Software Engineer > About MindLogics; What I owned"
+              }
+            ]
+          }
+        ],
+        "gaps": [],
+        "summary": "Adisha has evidence matching most of the Senior Frontend Engineer requirements, including React and TypeScript, frontend architecture ownership, code reviews and mentoring, and Jest with React Testing Library. His banking experience is supported by his work at OCBC and DBS, though the DBS evidence is narrower, and his years of frontend experience are shown only as an overall figure. Remaining gaps are limited to a partial showing of REST API design and accessibility practice that is described as a general approach rather than specific delivered work."
+      }
+    },
+    {
+      "id": "ml-engineer",
+      "passed": true,
+      "failures": [],
+      "seconds": 7.6,
+      "fit": {
+        "role": "Machine Learning Engineer",
+        "matched": [],
+        "partial": [
+          {
+            "requirement": "Sydney location",
+            "evidence": [
+              {
+                "label": "Adisha Madhushanka — Key facts",
+                "quote": "Adisha is open to relocating to Melbourne, Sydney or Adelaide.",
+                "path": "content/knowledge/facts.md",
+                "heading": "Adisha Madhushanka — Key facts > Work rights; Location; Relocation; Role types"
+              }
+            ]
+          }
+        ],
+        "gaps": [
+          "PhD in machine learning or related field",
+          "Training deep learning models with PyTorch",
+          "Distributed training on GPU clusters",
+          "Computer vision",
+          "MLOps with Kubernetes and Kubeflow",
+          "Published research at top-tier conferences",
+          "C++ for inference code",
+          "Python"
+        ],
+        "summary": "Adisha has a partial match for the Sydney location requirement, since his quote shows he is open to relocating to Sydney rather than being based there. The card lists gaps in a PhD in machine learning, PyTorch deep learning, distributed GPU training, computer vision, MLOps with Kubernetes and Kubeflow, top-tier conference publications, C++ inference code and Python, none of which has supporting evidence. Overall, the card shows little fit for this Machine Learning Engineer role beyond the partial location match."
+      }
+    },
+    {
+      "id": "full-stack",
+      "passed": true,
+      "failures": [],
+      "seconds": 7.938,
+      "fit": {
+        "role": "Full-Stack Engineer",
+        "matched": [
+          {
+            "requirement": "React and Node.js",
+            "evidence": [
+              {
+                "label": "MindLogics Limited — Senior Software Engineer",
+                "quote": "he developed and maintained scalable web applications using React.js, Next.js, Node.js, Express.js, JavaScript, TypeScript, HTML and CSS.",
+                "path": "content/knowledge/roles/mindlogics.md",
+                "heading": "MindLogics Limited — Senior Software Engineer > About MindLogics; What I owned"
+              }
+            ]
+          },
+          {
+            "requirement": "Melbourne, on-site",
+            "evidence": [
+              {
+                "label": "Adisha Madhushanka — Key facts",
+                "quote": "Adisha is open to relocating to Melbourne, Sydney or Adelaide.",
+                "path": "content/knowledge/facts.md",
+                "heading": "Adisha Madhushanka — Key facts > Work rights; Location; Relocation; Role types"
+              },
+              {
+                "label": "Adisha Madhushanka — Key facts",
+                "quote": "Adisha is open to remote, hybrid and fully on-site work.",
+                "path": "content/knowledge/facts.md",
+                "heading": "Adisha Madhushanka — Key facts > Work rights; Location; Relocation; Role types"
+              }
+            ]
+          },
+          {
+            "requirement": "Australian work rights",
+            "evidence": [
+              {
+                "label": "Adisha Madhushanka — Key facts",
+                "quote": "Adisha holds unrestricted Australian working rights.",
+                "path": "content/knowledge/facts.md",
+                "heading": "Adisha Madhushanka — Key facts > Work rights; Location; Relocation; Role types"
+              }
+            ]
+          }
+        ],
+        "partial": [
+          {
+            "requirement": "Full-stack experience",
+            "evidence": [
+              {
+                "label": "Adisha Madhushanka — Key facts",
+                "quote": "Adisha has 10+ years of experience delivering large-scale web applications across banking, aviation, telecommunications and enterprise environments.",
+                "path": "content/knowledge/facts.md",
+                "heading": "Adisha Madhushanka — Key facts > Availability; Experience; Education; How to contact Adisha; What the assistant hands off to Adisha"
+              },
+              {
+                "label": "Singapore Airlines — Senior Software Engineer (React JS)",
+                "quote": "He also did full-stack work, including on the backend-for-frontend layer.",
+                "path": "content/knowledge/roles/singapore-airlines.md",
+                "heading": "Singapore Airlines — Senior Software Engineer (React JS) > Team and setup; Shared React component library; What I'm proud of; Mentoring and leadership; What I learned; Why I moved on"
+              }
+            ]
+          },
+          {
+            "requirement": "PostgreSQL",
+            "evidence": [
+              {
+                "label": "OCBC Bank — Senior Software Engineer (AVP)",
+                "quote": "The stack included React JS, JavaScript, Java, Spring Boot 2 and 3, Docker, OpenShift, Jenkins, JUnit 5, PostgreSQL and Redis.",
+                "path": "content/knowledge/roles/ocbc.md",
+                "heading": "OCBC Bank — Senior Software Engineer (AVP) > What I owned; Team and setup; Frontend practices and tooling; Mentoring and leadership; What I learned"
+              }
+            ]
+          },
+          {
+            "requirement": "AWS",
+            "evidence": [
+              {
+                "label": "Singapore Airlines — Senior Software Engineer (React JS)",
+                "quote": "He also contributed to integrating the frontend with AWS cloud services and Node.js backend APIs",
+                "path": "content/knowledge/roles/singapore-airlines.md",
+                "heading": "Singapore Airlines — Senior Software Engineer (React JS) > What I owned; How Adisha joined Singapore Airlines"
+              },
+              {
+                "label": "MindLogics Limited — Senior Software Engineer",
+                "quote": "Adisha worked with Textract and Bedrock on this document data extraction.",
+                "path": "content/knowledge/roles/mindlogics.md",
+                "heading": "MindLogics Limited — Senior Software Engineer > AI document processing in the Visa Workflow system; Team and setup"
+              }
+            ]
+          },
+          {
+            "requirement": "CI/CD pipelines",
+            "evidence": [
+              {
+                "label": "MindLogics Limited — Senior Software Engineer",
+                "quote": "The team released monthly through CI/CD pipelines.",
+                "path": "content/knowledge/roles/mindlogics.md",
+                "heading": "MindLogics Limited — Senior Software Engineer > AI document processing in the Visa Workflow system; Team and setup"
+              }
+            ]
+          }
+        ],
+        "gaps": [
+          "Kubernetes",
+          "Infrastructure as code",
+          "Go backend services"
+        ],
+        "summary": "Adisha has a partial match for this full-stack engineer role, with his strongest evidence in React and Node.js work and in holding unrestricted Australian working rights. His claimed full-stack experience, PostgreSQL, AWS and CI/CD pipelines are only partly supported by the write-ups, and the card lists gaps in Kubernetes, infrastructure as code and Go backend services."
+      }
+    }
+  ]
+}
