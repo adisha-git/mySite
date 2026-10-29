@@ -1,3 +1,4 @@
+import { GoogleTagManager } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
 import { Geist, JetBrains_Mono } from "next/font/google";
 import { ChatLauncher } from "@/components/chat/ChatLauncher";
@@ -79,6 +80,11 @@ export const viewport: Viewport = {
   themeColor: "#070B12",
 };
 
+// Google Tag Manager loads only where NEXT_PUBLIC_GTM_ID is set to a container ID
+// (production), so local development and previews don't send analytics.
+const gtmId = process.env.NEXT_PUBLIC_GTM_ID?.trim();
+const hasGtm = Boolean(gtmId && /^GTM-[A-Z0-9]+$/.test(gtmId));
+
 // Applies the saved theme (dark by default) before first paint to avoid a flash.
 const themeScript = `(function(){try{var t=localStorage.getItem("theme");document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark")}catch(e){}})()`;
 
@@ -92,6 +98,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
+      {hasGtm ? <GoogleTagManager gtmId={gtmId!} /> : null}
       <body className="flex min-h-dvh flex-col">
         <a
           href="#main"
