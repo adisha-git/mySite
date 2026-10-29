@@ -3,6 +3,7 @@
 import { AnimatePresence, m } from "framer-motion";
 import {
   ArrowUpRight,
+  Bot,
   Briefcase,
   Heart,
   MessageSquare,
@@ -17,9 +18,10 @@ import { buttonClass } from "./ui";
 
 type Filter = "All" | ProjectCategory;
 
-const filters: Filter[] = ["All", "Next.js", "AWS", "WordPress", "Full-stack"];
+const filters: Filter[] = ["All", "AI", "Next.js", "AWS", "Full-stack"];
 
 const originIcons: Record<ProjectOrigin, LucideIcon> = {
+  site: Bot,
   saas: Rocket,
   work: Briefcase,
   friend: Heart,
@@ -80,6 +82,15 @@ function ProjectCard({ project }: { project: Project }) {
               />
               <span className="sr-only">: {project.name} (opens in a new tab)</span>
             </a>
+          ) : project.tryChat ? (
+            <button
+              type="button"
+              className={buttonClass("primary", "!px-4 !py-2")}
+              onClick={() => openChat()}
+            >
+              <MessageSquare aria-hidden="true" className="size-4" />
+              Try the chat
+            </button>
           ) : (
             <button
               type="button"

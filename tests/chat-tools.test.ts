@@ -143,7 +143,7 @@ describe("site actions only when asked", () => {
 
   it("doesn't offer to open a project when the visitor only asks about it", () => {
     for (const message of [
-      "What is HeyKitty?",
+      "What is the Dhanesha site?",
       "Tell me about Sri Aero.",
       "What did he build at MindLogics?",
     ]) {

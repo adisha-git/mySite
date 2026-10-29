@@ -174,7 +174,7 @@ describe("eval checks for site actions", () => {
     const q = question({ category: "projects", notTools: ["openProject"] });
     expect(
       checkAnswer(q, {
-        text: "HeyKitty is a WordPress storefront.",
+        text: "Sri Aero is a site for an aircraft-detailing business.",
         tools: ["openProject"],
         facts: [],
       }),

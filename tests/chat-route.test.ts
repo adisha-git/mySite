@@ -390,7 +390,7 @@ describe("POST /api/chat", () => {
   });
 
   it("ends the answer at any tool call and only offers the actions the visitor asked for", async () => {
-    await POST(post({ messages: [userMessage("What is HeyKitty?")] }));
+    await POST(post({ messages: [userMessage("What is Sri Aero?")] }));
     const call = (streamText.mock.calls[0] as unknown[])[0] as {
       stopWhen: (options: { steps: unknown[] }) => boolean | PromiseLike<boolean>;
       experimental_transform: unknown;

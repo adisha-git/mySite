@@ -18,7 +18,6 @@ const targets = [
   },
   { slug: "tgs", url: "https://www.tgs.co.nz/" },
   { slug: "mindlogics", url: "https://mindlogics.co.nz/" },
-  { slug: "heykitty", url: "https://heykitty.net/" },
 ];
 
 const outDir = join(process.cwd(), "public", "projects");

@@ -141,11 +141,11 @@ questions:
     notTools: ["openProject", "downloadCv", "scrollToSection"]
     question: What is his AI Lead-Capture Chatbot?
     must: ["development"]
-  - id: proj-heykitty
+  - id: proj-dhanesha
     category: projects
     notTools: ["openProject", "downloadCv", "scrollToSection"]
-    question: What is HeyKitty?
-    must: ["WordPress"]
+    question: What is the Dhanesha site?
+    must: ["Next.js"]
   - id: skills-testing
     category: projects
     notTools: ["openProject", "downloadCv", "scrollToSection"]

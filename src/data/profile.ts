@@ -5,10 +5,10 @@
 
 export type ProjectStatus = "Live" | "In progress" | "Demo on request";
 
-export type ProjectCategory = "Next.js" | "AWS" | "WordPress" | "Full-stack";
+export type ProjectCategory = "AI" | "Next.js" | "AWS" | "Full-stack";
 
 /** Where a project came from — shown on its card so the context is clear. */
-export type ProjectOrigin = "saas" | "work" | "friend";
+export type ProjectOrigin = "site" | "saas" | "work" | "friend";
 
 export interface Project {
   slug: string;
@@ -17,8 +17,13 @@ export interface Project {
   origin: ProjectOrigin;
   /** Short line shown with the origin icon, e.g. "Built for a friend". */
   originLabel: string;
-  /** Public URL. Omit for private projects — the card shows "Request a demo" instead. */
+  /**
+   * Public URL. Omit for private projects — the card shows "Request a demo"
+   * instead, or "Try the chat" when `tryChat` is set.
+   */
   url?: string;
+  /** Lives on this site: the card's button opens the chat instead of linking out. */
+  tryChat?: boolean;
   status: ProjectStatus;
   stack: string[];
   /** Which filter buttons this project appears under. */
@@ -27,7 +32,7 @@ export interface Project {
   image?: string;
   imageAlt: string;
   /** Renders an illustrated chat-widget mock instead of a screenshot. */
-  mock?: "chatbot";
+  mock?: "chatbot" | "ask-adisha";
 }
 
 export interface Experience {
@@ -232,6 +237,35 @@ export const profile = {
 
   projects: [
     {
+      slug: "ask-adisha",
+      name: "Ask about Adisha",
+      description:
+        "The AI assistant on this site. It answers questions about my work from my own write-ups using RAG, shows key facts word for word, checks a job description against my experience with quoted evidence, and passes recruiters' details to me.",
+      origin: "site",
+      originLabel: "Built for this site",
+      tryChat: true,
+      status: "Live",
+      stack: [
+        "Next.js",
+        "TypeScript",
+        "Vercel AI SDK",
+        "Claude Haiku & Sonnet",
+        "RAG",
+        "Voyage AI embeddings",
+        "Neon Postgres + pgvector",
+        "Drizzle ORM",
+        "Upstash Redis",
+        "Cloudflare Turnstile",
+        "Resend",
+        "Tailwind CSS",
+        "Vitest",
+      ],
+      categories: ["AI", "Next.js", "Full-stack"],
+      imageAlt:
+        "Illustration of the Ask about Adisha chat: a visitor asks about his work and the answer shows its sources.",
+      mock: "ask-adisha",
+    },
+    {
       slug: "chatbot",
       name: "AI Lead-Capture Chatbot",
       description:
@@ -240,7 +274,7 @@ export const profile = {
       originLabel: "My SaaS · in development",
       status: "Demo on request",
       stack: ["React", "JavaScript", "Node.js", "Express.js", "PostgreSQL"],
-      categories: ["Full-stack"],
+      categories: ["AI", "Full-stack"],
       imageAlt:
         "Illustration of a chat widget greeting a website visitor and asking for their email.",
       mock: "chatbot",
@@ -313,21 +347,6 @@ export const profile = {
       image: "/projects/dhanesha.webp",
       imageAlt:
         "Dhanesha Chemicals & Fertilisers homepage over a green paddy field, with product and wholesale calls to action.",
-    },
-    {
-      slug: "heykitty",
-      name: "HeyKitty",
-      description:
-        "Playful WordPress storefront for a friend's cat products brand — a fun one to design.",
-      origin: "friend",
-      originLabel: "Built for a friend",
-      url: "https://heykitty.net/",
-      status: "Live",
-      stack: ["WordPress", "PHP", "cPanel"],
-      categories: ["WordPress"],
-      image: "/projects/heykitty.webp",
-      imageAlt:
-        "HeyKitty homepage in pink with a kitten on a blanket and the headline “Everything for Happy Cats”.",
     },
   ] satisfies Project[],
 
