@@ -50,9 +50,53 @@ function ChatbotMock() {
   );
 }
 
+/** This site's own chat, drawn like the real widget: a question, an answer and its sources. */
+function AskAdishaMock() {
+  return (
+    <div className="absolute inset-0 bg-[linear-gradient(135deg,#070B12_0%,#0B1220_55%,#0E2A3A_100%)]">
+      {/* Faux page behind the panel */}
+      <div aria-hidden="true" className="absolute inset-0 p-[6%] opacity-40">
+        <div className="h-2.5 w-1/4 rounded bg-white/25" />
+        <div className="mt-3 h-6 w-1/2 rounded bg-white/15" />
+        <div className="mt-2 h-6 w-2/5 rounded bg-white/15" />
+        <div className="mt-5 h-2 w-2/5 rounded bg-white/10" />
+      </div>
+      <div className="absolute top-[6%] right-[5%] bottom-[6%] w-[62%] max-w-[290px] overflow-hidden rounded-xl border border-white/10 bg-[#070B12] font-sans text-[#E6EDF3] shadow-2xl shadow-black/50">
+        <div className="border-b border-white/10 px-3 py-2">
+          <p className="font-mono text-[10px] text-[#61DAFB]">~/ask-adisha $</p>
+          <p className="text-[8px] text-[#8B98A9]">Ask about Adisha</p>
+        </div>
+        <div className="space-y-1.5 p-2.5 text-[9px] leading-snug sm:text-[10px]">
+          <p className="ml-auto w-fit max-w-[85%] rounded-lg rounded-br-sm border border-[#61DAFB]/30 bg-[#61DAFB]/10 px-2 py-1 font-mono">
+            <span className="text-[#61DAFB]">$</span> What did he do at OCBC?
+          </p>
+          <p>
+            He led frontend architecture for an internal banking app and mentored its engineers.
+          </p>
+          <div>
+            <p className="font-mono text-[8px] text-[#8B98A9]">{"// sources"}</p>
+            <div className="mt-1 flex gap-1">
+              <span className="rounded border border-white/15 px-1.5 py-0.5 text-[8px] text-[#8B98A9]">
+                OCBC Bank
+              </span>
+              <span className="rounded border border-white/15 px-1.5 py-0.5 text-[8px] text-[#8B98A9]">
+                How he works
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Screenshot inside a minimal browser frame, or a fallback visual. */
 export function ProjectVisual({ project }: { project: Project }) {
-  const host = project.url ? new URL(project.url).host.replace(/^www\./, "") : "demo.chatbot";
+  const host = project.url
+    ? new URL(project.url).host.replace(/^www\./, "")
+    : project.tryChat
+      ? "adishamadhushanka.com.au"
+      : "demo.chatbot";
   return (
     <div className="border-line bg-surface overflow-hidden rounded-xl border">
       <div className="border-line flex items-center gap-1.5 border-b px-3 py-2">
@@ -65,9 +109,9 @@ export function ProjectVisual({ project }: { project: Project }) {
       </div>
       <div className="relative aspect-[16/10] overflow-hidden">
         <div className="absolute inset-0 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]">
-          {project.mock === "chatbot" ? (
+          {project.mock ? (
             <div role="img" aria-label={project.imageAlt} className="absolute inset-0">
-              <ChatbotMock />
+              {project.mock === "chatbot" ? <ChatbotMock /> : <AskAdishaMock />}
             </div>
           ) : project.image ? (
             <Image

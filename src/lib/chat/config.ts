@@ -107,7 +107,6 @@ export const chatConfig: ChatConfig = {
         name: "Dhanesha Chemicals & Fertilisers",
         url: "https://www.dhaneshachemicalsandfertilisers.com/",
       },
-      { slug: "heykitty", name: "HeyKitty", url: "https://heykitty.net/" },
     ],
     sourceSections: [
       { pathPrefix: "content/knowledge/roles/", sectionId: "experience" },
