@@ -8,6 +8,8 @@ This chat answers questions about Adisha using retrieval-augmented generation (R
 
 For each question, it runs hybrid search: the 8 closest chunks by vector similarity and the 8 best by Postgres full-text search, merged with reciprocal rank fusion, keeping the best 6. Claude Haiku 5.5 then answers only from those chunks and a set of fixed facts, and says when it doesn't know. The source chips under each answer show which files the answer used.
 
+A pasted job description goes to a separate fit check. Claude Sonnet 5.5 compares it with the 12 most relevant chunks and the fixed facts, and quotes the source for each requirement it matches. The server keeps a match only if that quote appears word for word in the source; any requirement without a verified quote is listed as a gap. The visitor can then pass the role on to Adisha, and the job description is saved with their details.
+
 ## How it stays accurate and safe
 
 Fixed facts such as his work rights and location are inserted word for word from configuration, so the model can't rephrase them. Questions about salary, references or private matters are handed off to Adisha. Each visitor is rate-limited, the first message of a chat passes a Cloudflare Turnstile bot check, and a chat is capped at 20 messages. Visitors' IP addresses are only stored as hashes.
@@ -18,4 +20,4 @@ An evaluation suite of about 50 questions checks the answers for required facts,
 
 ## How it was built
 
-Adisha built it with Next.js and the Vercel AI SDK, using AI-assisted development with Claude Code. The chat's core code is kept separate from the rest of the site, so it can be reused on other websites.
+Adisha built it as a retrieval-augmented generation (RAG) chat, with Next.js and the Vercel AI SDK, using AI-assisted development with Claude Code. It retrieves the most relevant parts of his knowledge files for each question, and Claude Haiku answers from them. The chat's core code is kept separate from the rest of the site, so it can be reused on other websites.

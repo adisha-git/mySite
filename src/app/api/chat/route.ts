@@ -1,17 +1,12 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { hasToolCall, stepCountIs, streamText, type ModelMessage } from "ai";
-import { eq, sql } from "drizzle-orm";
+import { stepCountIs, streamText, type ModelMessage } from "ai";
 import { citedSources, parseCitations, stripCitations } from "@/lib/chat/citations";
 import { chatConfig } from "@/lib/chat/config";
-import { getDb } from "@/lib/chat/db/client";
-import {
-  conversations,
-  messages as messagesTable,
-  type ChatMessageMetadata,
-  type MessageSource,
-} from "@/lib/chat/db/schema";
+import type { ChatMessageMetadata, MessageSource } from "@/lib/chat/db/schema";
+import { factStepText, factStepTransform } from "@/lib/chat/fact-step";
 import {
   chatRequestSchema,
+  checkConversation,
   clientIp,
   hashIp,
   isSameOrigin,
@@ -20,12 +15,10 @@ import {
   readBodyCapped,
   serverSecret,
   signConversation,
-  turnstileSecret,
-  verifyConversation,
-  verifyTurnstile,
 } from "@/lib/chat/guard";
 import { buildInstructions } from "@/lib/chat/prompt";
 import { retrieve, type RetrievedChunk } from "@/lib/chat/retrieve";
+import { saveExchange, storedMessageCount } from "@/lib/chat/store";
 import { activeToolsFor, buildChatTools } from "@/lib/chat/tools";
 
 const UNAVAILABLE = "The chat isn't available right now. Please try again later.";
@@ -39,56 +32,6 @@ function logError(context: string, error: unknown) {
     `chat: ${context}`,
     error instanceof Error ? `${error.name}: ${error.message}` : "unknown error",
   );
-}
-
-type Exchange = {
-  conversationId: string;
-  ipHash: string;
-  userAgent: string | null;
-  question: string;
-  answer: string;
-  sources: MessageSource[];
-  tokensIn: number | undefined;
-  tokensOut: number | undefined;
-};
-
-async function saveExchange(e: Exchange) {
-  const db = getDb();
-  await db.batch([
-    db
-      .insert(conversations)
-      .values({ id: e.conversationId, ipHash: e.ipHash, userAgent: e.userAgent, messageCount: 2 })
-      .onConflictDoUpdate({
-        target: conversations.id,
-        set: { messageCount: sql`${conversations.messageCount} + 2` },
-      }),
-    db.insert(messagesTable).values([
-      { conversationId: e.conversationId, role: "user", content: e.question },
-      {
-        conversationId: e.conversationId,
-        role: "assistant",
-        content: e.answer,
-        sources: e.sources,
-        tokensIn: e.tokensIn ?? null,
-        tokensOut: e.tokensOut ?? null,
-      },
-    ]),
-  ]);
-}
-
-/** Messages already stored for a conversation; 0 if unknown, so a DB hiccup never blocks a chat. */
-async function storedMessageCount(conversationId: string): Promise<number> {
-  try {
-    const db = getDb();
-    const [row] = await db
-      .select({ count: conversations.messageCount })
-      .from(conversations)
-      .where(eq(conversations.id, conversationId));
-    return row?.count ?? 0;
-  } catch (error) {
-    logError("failed to read conversation", error);
-    return 0;
-  }
 }
 
 export async function POST(request: Request) {
@@ -128,39 +71,27 @@ export async function POST(request: Request) {
   }
 
   const { messages } = parsed.data;
-  let conversationId: string;
-  if (parsed.data.conversationId) {
-    // A later message: it must carry the token issued when the conversation passed the bot check.
-    const token = parsed.data.conversationToken;
-    if (!token || !verifyConversation(parsed.data.conversationId, token, secret)) {
-      return Response.json(
-        { error: "This chat session isn't valid any more. Please refresh the page and try again." },
-        { status: 403 },
-      );
+  const conversation = await checkConversation(parsed.data, secret);
+  if (!conversation.ok) {
+    if (conversation.misconfigured) {
+      logError("not configured", new Error(conversation.error));
+      return fail(503, UNAVAILABLE);
     }
-    conversationId = parsed.data.conversationId;
+    const { status, error, code } = conversation;
+    return Response.json(code ? { error, code } : { error }, { status });
+  }
+  const { conversationId } = conversation;
+  if (!conversation.isNew) {
     // The client caps the conversation too, but a client can drop its history; the stored count can't.
-    if ((await storedMessageCount(conversationId)) + 2 > MAX_MESSAGES) {
+    const stored = await storedMessageCount(conversationId, (error) =>
+      logError("failed to read conversation", error),
+    );
+    if (stored + 2 > MAX_MESSAGES) {
       return fail(
         429,
         "This chat has reached its limit. Please use the contact form to reach Adisha directly.",
       );
     }
-  } else {
-    // The first message of a conversation needs a Turnstile token, verified with Cloudflare.
-    const turnstile = turnstileSecret();
-    if (!turnstile) {
-      logError("not configured", new Error("TURNSTILE_SECRET_KEY is not set"));
-      return fail(503, UNAVAILABLE);
-    }
-    const token = parsed.data.turnstileToken;
-    if (!token || !(await verifyTurnstile(token, turnstile))) {
-      return Response.json(
-        { error: "We couldn't confirm you're not a bot. Please try again.", code: "bot-check" },
-        { status: 403 },
-      );
-    }
-    conversationId = crypto.randomUUID();
   }
   const conversationToken = signConversation(conversationId, secret);
   const userTexts = messages.filter((m) => m.role === "user").map((m) => m.text);
@@ -194,12 +125,19 @@ export async function POST(request: Request) {
     tools,
     // Site actions only when the visitor asked for one.
     activeTools: activeToolsFor(question, tools),
-    // One step for the answer or a tool call, one more to reply after a tool runs.
-    // A fact card always ends the answer, so no text can follow and repeat it.
-    stopWhen: [stepCountIs(2), hasToolCall("showFacts")],
+    // One step: any tool call (a fact card, a lead card or a site action) ends the
+    // answer, so nothing written after it can repeat what came before.
+    stopWhen: stepCountIs(1),
+    // A fact card's step shows only its lead-in, never the model's own wording of the fact.
+    experimental_transform: factStepTransform(),
     providerOptions: { anthropic: { effort: "low" } },
     onFinish: async ({ steps, totalUsage }) => {
-      const answer = steps.map((s) => s.text).join("\n\n");
+      // What the visitor saw of each step's text (see fact-step.ts).
+      const visibleText = steps.map((s) => {
+        const facts = s.toolCalls.find((c) => c.toolName === "showFacts");
+        return facts ? factStepText(s.text, (facts.input as { leadIn?: string }).leadIn) : s.text;
+      });
+      const answer = visibleText.join("\n\n");
       try {
         await saveExchange({
           conversationId,
@@ -208,8 +146,8 @@ export async function POST(request: Request) {
           question,
           // The stored answer includes the fact cards' text, as the visitor saw it.
           answer: steps
-            .flatMap((s) => [
-              stripCitations(s.text).trim(),
+            .flatMap((s, i) => [
+              stripCitations(visibleText[i]).trim(),
               ...s.toolResults.flatMap((r) =>
                 r.toolName === "showFacts"
                   ? (r.output as { facts: { text: string }[] }).facts.map((f) => f.text)

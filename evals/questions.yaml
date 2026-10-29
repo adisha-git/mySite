@@ -151,6 +151,8 @@ questions:
     notTools: ["openProject", "downloadCv", "scrollToSection"]
     question: What testing tools does he use?
     must: ["Jest", "React Testing Library"]
+    # The source scopes the 80% gate to the relevant component.
+    keep: [{ when: "80%", must: "relevant component" }]
   - id: skills-cv
     category: projects
     question: Can I get a copy of his CV?

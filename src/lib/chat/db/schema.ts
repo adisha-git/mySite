@@ -58,6 +58,8 @@ export const conversations = pgTable("conversations", {
   ipHash: text("ip_hash").notNull(),
   userAgent: text("user_agent"),
   messageCount: integer("message_count").notNull().default(0),
+  /** The last job description checked with the fit check in this conversation. */
+  jobDescription: text("job_description"),
 });
 
 export const messages = pgTable(
@@ -87,5 +89,7 @@ export const leads = pgTable("leads", {
   company: text(),
   topic: text().notNull(),
   note: text(),
+  /** The job description from the conversation's fit check, if there was one. */
+  jobDescription: text("job_description"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

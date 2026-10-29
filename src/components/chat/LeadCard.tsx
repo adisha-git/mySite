@@ -18,10 +18,13 @@ export function LeadCard({
   draft,
   conversationId,
   conversationToken,
+  withJobDescription = false,
 }: {
   draft: LeadFields;
   conversationId?: string;
   conversationToken?: string;
+  /** From a fit check: the job description goes with the lead. */
+  withJobDescription?: boolean;
 }) {
   const id = useId();
   // One id per card, reused on retries, so the lead is saved and emailed at most once.
@@ -140,7 +143,8 @@ export function LeadCard({
         </p>
       ) : null}
       <p className="text-muted text-xs">
-        Nothing is sent until you confirm. {firstName} gets these details by email.
+        Nothing is sent until you confirm. {firstName} gets these details
+        {withJobDescription ? " and the job description" : ""} by email.
       </p>
       <div className="flex gap-2">
         <button

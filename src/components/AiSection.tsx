@@ -1,5 +1,6 @@
 import { Bot, Check, CloudCog, FileSearch, Workflow, type LucideIcon } from "lucide-react";
 import { profile, type AiCapability } from "@/data/profile";
+import { ChatNote } from "./ChatNote";
 import { Reveal } from "./Reveal";
 import { Section, Tag } from "./ui";
 
@@ -72,6 +73,10 @@ export function AiSection() {
             </li>
           ))}
         </ol>
+      </Reveal>
+
+      <Reveal className="mt-10">
+        <ChatNote />
       </Reveal>
 
       <Reveal className="border-line mt-16 grid gap-4 border-t pt-8 md:grid-cols-3 md:gap-8">

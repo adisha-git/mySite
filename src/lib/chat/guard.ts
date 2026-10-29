@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
+import { fitResultSchema, fitToText } from "./fit";
 import { MAX_JD_CHARS, MAX_MESSAGE_CHARS, MAX_MESSAGES } from "./limits";
 
 /**
@@ -11,6 +12,7 @@ import { MAX_JD_CHARS, MAX_MESSAGE_CHARS, MAX_MESSAGES } from "./limits";
  * Rate limits live in Upstash Redis so they hold across Vercel instances:
  *  - per hashed IP: 10 messages a minute and 60 a day (sliding windows)
  *  - per hashed IP: 5 confirmed leads an hour
+ *  - per hashed IP: 5 job-description fit checks an hour (they use Claude Sonnet)
  * Without Redis credentials (e.g. local dev) it falls back to an in-memory
  * counter, which only limits bursts hitting a single instance.
  *
@@ -25,17 +27,20 @@ export const MAX_BODY_BYTES = 64 * 1024;
 const PER_MINUTE = { max: 10, windowMs: 60 * 1000 } as const;
 const PER_DAY = { max: 60, windowMs: 24 * 60 * 60 * 1000 } as const;
 const LEADS_PER_HOUR = { max: 5, windowMs: 60 * 60 * 1000 } as const;
+const FITS_PER_HOUR = { max: 5, windowMs: 60 * 60 * 1000 } as const;
 
 // ---------- Input ----------
 
 const textPart = z.object({ type: z.literal("text"), text: z.string() });
+// A fit card shown earlier; resent to the model as plain text.
+const fitPart = z.object({ type: z.literal("data-fit"), data: fitResultSchema });
 // Other UI parts (step markers, sources) may come back from the client; they're ignored.
 const otherPart = z.object({ type: z.string().max(64) }).loose();
 
 const messageSchema = z.object({
   id: z.string().max(128),
   role: z.enum(["user", "assistant"]),
-  parts: z.array(z.union([textPart, otherPart])).max(50),
+  parts: z.array(z.union([textPart, fitPart, otherPart])).max(50),
 });
 
 export type ChatMessage = { role: "user" | "assistant"; text: string };
@@ -55,8 +60,14 @@ export const chatRequestSchema = z
       .map((m): ChatMessage => ({
         role: m.role,
         text: m.parts
-          .filter((p): p is z.infer<typeof textPart> => p.type === "text" && "text" in p)
-          .map((p) => p.text)
+          .map((p) => {
+            if (p.type === "text" && "text" in p) return p.text as string;
+            if (p.type === "data-fit" && "data" in p) {
+              return fitToText(p.data as z.infer<typeof fitResultSchema>);
+            }
+            return "";
+          })
+          .filter(Boolean)
           .join("\n")
           .trim(),
       }))
@@ -180,6 +191,51 @@ export async function verifyTurnstile(token: string, secret: string): Promise<bo
   }
 }
 
+// ---------- Conversations ----------
+
+export type ConversationCheck =
+  | { ok: true; conversationId: string; isNew: boolean }
+  | { ok: false; status: number; error: string; code?: "bot-check"; misconfigured?: boolean };
+
+/**
+ * A later message must carry the token issued when its conversation passed the
+ * bot check; the first message of a conversation must pass Turnstile.
+ */
+export async function checkConversation(
+  request: { conversationId?: string; conversationToken?: string; turnstileToken?: string },
+  secret: string,
+): Promise<ConversationCheck> {
+  if (request.conversationId) {
+    const token = request.conversationToken;
+    if (!token || !verifyConversation(request.conversationId, token, secret)) {
+      return {
+        ok: false,
+        status: 403,
+        error: "This chat session isn't valid any more. Please refresh the page and try again.",
+      };
+    }
+    return { ok: true, conversationId: request.conversationId, isNew: false };
+  }
+  const turnstile = turnstileSecret();
+  if (!turnstile) {
+    return {
+      ok: false,
+      status: 503,
+      error: "TURNSTILE_SECRET_KEY is not set",
+      misconfigured: true,
+    };
+  }
+  if (!request.turnstileToken || !(await verifyTurnstile(request.turnstileToken, turnstile))) {
+    return {
+      ok: false,
+      status: 403,
+      error: "We couldn't confirm you're not a bot. Please try again.",
+      code: "bot-check",
+    };
+  }
+  return { ok: true, conversationId: crypto.randomUUID(), isNew: true };
+}
+
 // ---------- Rate limiting ----------
 
 export type RateLimitResult = { ok: true } | { ok: false; retryAfter: number };
@@ -237,23 +293,21 @@ export async function rateLimitChat(ipHash: string, now = Date.now()): Promise<R
   return { ok: true };
 }
 
-const leadLimiter = redis
-  ? new Ratelimit({
-      redis,
-      prefix: "chat:lead",
-      limiter: Ratelimit.slidingWindow(LEADS_PER_HOUR.max, "1 h"),
-    })
-  : null;
-
-export async function rateLimitLead(ipHash: string, now = Date.now()): Promise<RateLimitResult> {
-  if (!leadLimiter) {
-    return memoryLimit(`lead:${ipHash}`, LEADS_PER_HOUR.max, LEADS_PER_HOUR.windowMs, now);
-  }
-  const { success, reset } = await leadLimiter.limit(ipHash);
-  return success
-    ? { ok: true }
-    : { ok: false, retryAfter: Math.max(1, Math.ceil((reset - now) / 1000)) };
+function hourlyLimit(prefix: string, { max, windowMs }: { max: number; windowMs: number }) {
+  const limiter = redis
+    ? new Ratelimit({ redis, prefix, limiter: Ratelimit.slidingWindow(max, "1 h") })
+    : null;
+  return async (ipHash: string, now = Date.now()): Promise<RateLimitResult> => {
+    if (!limiter) return memoryLimit(`${prefix}:${ipHash}`, max, windowMs, now);
+    const { success, reset } = await limiter.limit(ipHash);
+    return success
+      ? { ok: true }
+      : { ok: false, retryAfter: Math.max(1, Math.ceil((reset - now) / 1000)) };
+  };
 }
+
+export const rateLimitLead = hourlyLimit("chat:lead", LEADS_PER_HOUR);
+export const rateLimitFit = hourlyLimit("chat:fit", FITS_PER_HOUR);
 
 /** Test hook: clears the in-memory fallback counters. */
 export function resetMemoryRateLimit() {

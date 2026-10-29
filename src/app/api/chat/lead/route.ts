@@ -79,10 +79,11 @@ export async function POST(request: Request) {
   }
 
   let transcript: TranscriptMessage[] = [];
+  let jobDescription: string | null = null;
   try {
     const db = getDb();
     const [conversation] = await db
-      .select({ id: conversations.id })
+      .select({ id: conversations.id, jobDescription: conversations.jobDescription })
       .from(conversations)
       .where(eq(conversations.id, conversationId));
     if (conversation) {
@@ -91,6 +92,8 @@ export async function POST(request: Request) {
         .from(messagesTable)
         .where(eq(messagesTable.conversationId, conversationId))
         .orderBy(asc(messagesTable.createdAt));
+      // The fit check stores the job description it checked; older chats only have long messages.
+      jobDescription = conversation.jobDescription ?? findJobDescription(transcript);
     }
     // Same leadId on a retry: saved once.
     await db
@@ -103,6 +106,7 @@ export async function POST(request: Request) {
         company: lead.company || null,
         topic: lead.topic,
         note: lead.note || null,
+        jobDescription,
       })
       .onConflictDoNothing();
   } catch (error) {
@@ -113,7 +117,7 @@ export async function POST(request: Request) {
   const summary = await summariseConversation(transcript);
   const { subject, text, html } = buildLeadEmail(lead, {
     summary,
-    jobDescription: findJobDescription(transcript),
+    jobDescription,
     receivedAt: new Date(),
   });
 

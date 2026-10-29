@@ -1,0 +1,68 @@
+# Fit-check evals. Run with `npm run evals:fit` against `npm run dev`.
+# These job descriptions are made up for testing; they aren't real postings.
+#
+# match:      each item must be a matched requirement (in its name or evidence). "a|b" means a or b.
+# gap:        each item must be listed as a gap.
+# notMatched: no matched requirement may mention these.
+# Every card is also checked for: a response in under 15 seconds, every quote
+# found in the source it names, and a summary the judge finds supported.
+
+jobs:
+  - id: senior-frontend
+    match: ["React", "TypeScript"]
+    notMatched: ["Vue", "GraphQL"]
+    jobDescription: |
+      Senior Frontend Engineer — Brisbane (hybrid)
+
+      We're a financial services company building customer-facing web apps. You'll own frontend
+      architecture for a new online banking experience.
+
+      What you'll do:
+      - Build and maintain complex React applications in TypeScript
+      - Lead code reviews and mentor mid-level engineers
+      - Work with backend teams on REST API design
+      - Champion accessibility and automated testing (Jest, React Testing Library)
+
+      What we're looking for:
+      - 7+ years of frontend development experience
+      - Deep expertise in React and TypeScript
+      - Experience in banking or other regulated industries
+      - Nice to have: GraphQL and Vue
+      - Australian working rights required
+
+  - id: ml-engineer
+    gap: ["PyTorch|machine learning|ML", "PhD"]
+    notMatched: ["PyTorch", "PhD", "Kubernetes"]
+    jobDescription: |
+      Machine Learning Engineer — Sydney
+
+      Join our research team training and deploying large models for computer vision.
+
+      Requirements:
+      - PhD in machine learning, statistics or a related field
+      - 4+ years training deep learning models in Python with PyTorch
+      - Experience with distributed training on GPU clusters
+      - MLOps: deploying models with Kubernetes and Kubeflow
+      - Published research at top-tier conferences (CVPR, NeurIPS)
+      - Strong C++ for performance-critical inference code
+
+  - id: full-stack
+    match: ["Node"]
+    gap: ["Kubernetes"]
+    notMatched: ["Kubernetes", "Go"]
+    jobDescription: |
+      Full-Stack Engineer — Melbourne (on-site 3 days a week)
+
+      We're a SaaS company with a React frontend and a Node.js backend on AWS.
+
+      You'll:
+      - Build features end to end across React, Node.js and PostgreSQL
+      - Design and run services on AWS (Lambda, ECS)
+      - Own CI/CD pipelines and infrastructure as code
+      - Operate services on Kubernetes
+      - Write backend services in Go when performance matters
+
+      You have:
+      - 5+ years of full-stack experience
+      - Production experience with Node.js and PostgreSQL
+      - Comfort with AWS and Kubernetes

@@ -2,6 +2,7 @@ import { ArrowUpRight, CornerDownRight, Download } from "lucide-react";
 import { stripCitations } from "@/lib/chat/citations";
 import type { ChatUIMessage } from "@/lib/chat/tools";
 import { FactCard } from "./FactCard";
+import { FitCard } from "./FitCard";
 import { LeadCard } from "./LeadCard";
 import { Markdown } from "./Markdown";
 import { SourceChips } from "./SourceChips";
@@ -21,6 +22,14 @@ function ToolPart({
   onSection: (id: string) => void;
 }) {
   switch (part.type) {
+    case "data-fit":
+      return (
+        <FitCard
+          fit={part.data}
+          conversationId={metadata?.conversationId}
+          conversationToken={metadata?.conversationToken}
+        />
+      );
     case "tool-showFacts":
       if (part.state !== "output-available") return null;
       return <FactCard facts={part.output.facts} />;
@@ -75,7 +84,8 @@ export function MessageList({
   onSection,
 }: {
   messages: ChatUIMessage[];
-  thinking: boolean;
+  /** What to show while waiting, e.g. "thinking…"; null when not waiting. */
+  thinking: string | null;
   onSection: (id: string) => void;
 }) {
   return (
@@ -122,7 +132,7 @@ export function MessageList({
       )}
       {thinking ? (
         <li className="text-muted font-mono text-sm" role="status">
-          <span className="motion-safe:animate-pulse">thinking…</span>
+          <span className="motion-safe:animate-pulse">{thinking}</span>
         </li>
       ) : null}
     </ol>

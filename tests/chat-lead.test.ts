@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // The database, Resend and Claude are mocked: these tests never reach Neon, Resend or Anthropic.
 const { db, send, summarise } = vi.hoisted(() => {
   const db = {
-    conversation: [{ id: "c" }] as { id: string }[],
+    conversation: [{ id: "c", jobDescription: null }] as {
+      id: string;
+      jobDescription: string | null;
+    }[],
     transcript: [] as { role: "user" | "assistant"; content: string }[],
     inserted: [] as unknown[],
     failInsert: false,
@@ -78,7 +81,7 @@ const valid = () => ({
 
 beforeEach(() => {
   resetMemoryRateLimit();
-  db.conversation = [{ id: conversationId }];
+  db.conversation = [{ id: conversationId, jobDescription: null }];
   db.transcript = [];
   db.inserted = [];
   db.failInsert = false;
@@ -105,6 +108,7 @@ describe("POST /api/chat/lead", () => {
         company: "Acme",
         topic: "Recruiter / agency",
         note: "Senior React role in Brisbane.",
+        jobDescription: null,
       },
     ]);
     const [message, options] = send.mock.calls[0] as unknown as [
@@ -116,6 +120,16 @@ describe("POST /api/chat/lead", () => {
     expect(message.subject).toBe("[Chat lead · Recruiter / agency] Sam Lee — Acme");
     expect(message.text).toContain("Recruiter hiring a senior React engineer.");
     expect(options.idempotencyKey).toBe(`chat-lead/${leadId}`);
+  });
+
+  it("saves the job description from the conversation's fit check with the lead", async () => {
+    const jd = "Senior Frontend Engineer at Acme. React, TypeScript and accessibility.";
+    db.conversation = [{ id: conversationId, jobDescription: jd }];
+    await POST(post(valid()));
+    expect(db.inserted).toEqual([expect.objectContaining({ jobDescription: jd })]);
+    const [message] = send.mock.calls[0] as unknown as [{ text: string }];
+    expect(message.text).toContain("Job description they pasted:");
+    expect(message.text).toContain(jd);
   });
 
   it("includes a job description pasted in the conversation", async () => {

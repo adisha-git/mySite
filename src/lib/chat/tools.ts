@@ -2,7 +2,9 @@ import { tool, type InferUITools, type UIMessage } from "ai";
 import { z } from "zod";
 import type { ChatConfig } from "./config";
 import type { ChatMessageMetadata } from "./db/schema";
+import { FACT_LEAD_INS } from "./fact-step";
 import { factIds, getFacts } from "./facts";
+import type { FitResult } from "./fit";
 import { captureLeadInputSchema } from "./lead";
 
 /**
@@ -11,6 +13,9 @@ import { captureLeadInputSchema } from "./lead";
  * visitor's page (scrolls, or shows a CV / project link to click). Running
  * `execute` on the server lets the model write its reply in the same request,
  * with no second round trip from the browser.
+ *
+ * Every tool ends the answer (see the route's stopWhen), so the model writes
+ * its one sentence before calling one and never repeats itself afterwards.
  *
  * captureLead has no side effects: it only drafts the lead. The widget shows
  * the draft as a card, and the lead is saved and emailed only when the
@@ -23,8 +28,16 @@ export function buildChatTools(config: ChatConfig) {
 
   const all = {
     showFacts: tool({
-      description: `Show the visitor a card with fixed facts about ${config.persona.subjectName}, word for word. Use it whenever the answer needs one of these facts, instead of writing it: ${factIds.join(", ")}. Call it last, once, with every fact id the answer needs; the answer ends with the card.`,
-      inputSchema: z.object({ ids: z.array(z.enum(factIds)).min(1).max(4) }),
+      description: `Show the visitor a card with fixed facts about ${config.persona.subjectName}, word for word. Use it whenever the answer needs one of these facts, instead of writing it: ${factIds.join(", ")}. Call it once, with every fact id the answer needs; the answer ends with the card. Any text you write alongside it is replaced by leadIn, so put a yes/no answer there.`,
+      inputSchema: z.object({
+        ids: z.array(z.enum(factIds)).min(1).max(4),
+        leadIn: z
+          .enum(FACT_LEAD_INS)
+          .optional()
+          .describe(
+            '"Yes." or "No." when the question is a yes/no question; otherwise leave it out.',
+          ),
+      }),
       execute: async ({ ids }) => ({
         facts: getFacts(ids).map(({ id, label, text }) => ({ id, label, text })),
       }),
@@ -41,8 +54,6 @@ export function buildChatTools(config: ChatConfig) {
           topic: lead.topic,
           note: lead.note ?? "",
         },
-        instructions:
-          "The visitor now sees a card to check and confirm. Nothing has been saved or sent yet. Tell them in one short sentence to check the card and click Confirm. Don't say where on the page the card is.",
       }),
     }),
     downloadCv: tool({
@@ -97,9 +108,9 @@ export function activeToolsFor(message: string, tools: ChatTools): (keyof ChatTo
   );
 }
 
-/** The message shape shared by the API route and the widget. */
+/** The message shape shared by the API routes and the widget. A fit check's card is a `data-fit` part. */
 export type ChatUIMessage = UIMessage<
   ChatMessageMetadata,
-  never,
+  { fit: FitResult },
   InferUITools<Required<ChatTools>>
 >;
