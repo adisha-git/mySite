@@ -53,11 +53,14 @@ export function ChatPanel({
   onClose,
   pendingMessage,
   onPendingSent,
+  jdRequest,
 }: {
   open: boolean;
   onClose: () => void;
   pendingMessage: string | null;
   onPendingSent: () => void;
+  /** Goes up each time a "check my fit" link opens the chat: switch to the fit check. */
+  jdRequest: number;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -71,6 +74,15 @@ export function ChatPanel({
   const lastMode = useRef<"chat" | "jd">("chat");
   const sentBotCheck = useRef(false);
   const [fit, setFit] = useState<FitState>({ status: "idle" });
+
+  // Opened from a "check my fit" link: same as picking the JD starter chip.
+  // Adjusted during render (not in an effect), as React recommends for prop changes.
+  const [handledJdRequest, setHandledJdRequest] = useState(0);
+  if (jdRequest !== handledJdRequest) {
+    setHandledJdRequest(jdRequest);
+    setJdMode(true);
+    setPlaceholder(JD_PLACEHOLDER);
+  }
 
   const turnstile = useTurnstile(turnstileRef, open);
   const { take: takeToken, reset: resetBotCheck } = turnstile;
@@ -221,9 +233,10 @@ export function ChatPanel({
     }
   }, [messages, goToSection]);
 
+  // jdRequest: a "check my fit" link can be clicked while the panel is already open.
   useEffect(() => {
     if (open) inputRef.current?.focus();
-  }, [open]);
+  }, [open, jdRequest]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });

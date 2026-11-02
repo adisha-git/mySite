@@ -58,6 +58,8 @@ export const CHAT_PLACEMENTS = [
   "project_try_chat",
   /** "Request a demo" on a project card. */
   "project_request_demo",
+  /** "Hiring? Check my fit against your JD" in the hero: opens the chat in fit-check mode. */
+  "hero_fit_check",
 ] as const;
 
 export const FORM_NAMES = [

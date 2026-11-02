@@ -7,6 +7,8 @@ export interface OpenChatDetail {
   placement: ChatPlacement;
   /** Sent as the visitor's first message once the panel is ready. */
   message?: string;
+  /** "jd" opens the panel ready for a pasted job description (the fit check). */
+  mode?: "jd";
 }
 
 /** Opens the chat panel from anywhere on the page, optionally sending a message. */

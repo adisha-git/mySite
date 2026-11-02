@@ -14,12 +14,15 @@ export function ChatLauncher({ label, assistantName }: { label: string; assistan
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
+  // Counts "check my fit" opens, so the panel enters JD mode once per request.
+  const [jdRequest, setJdRequest] = useState(0);
   const launcherRef = useRef<HTMLButtonElement>(null);
   // Mirrors `open` synchronously, so chat_open fires only on a closed → open change.
   const openRef = useRef(false);
 
-  const show = useCallback((placement: ChatPlacement, message?: string) => {
+  const show = useCallback((placement: ChatPlacement, message?: string, mode?: "jd") => {
     if (message) setPending(message);
+    if (mode === "jd") setJdRequest((n) => n + 1);
     setLoaded(true);
     setOpen(true);
     if (!openRef.current) {
@@ -38,7 +41,7 @@ export function ChatLauncher({ label, assistantName }: { label: string; assistan
   useEffect(() => {
     const onOpen = (e: Event) => {
       const detail = (e as CustomEvent<OpenChatDetail>).detail;
-      show(detail.placement, detail.message);
+      show(detail.placement, detail.message, detail.mode);
     };
     window.addEventListener(OPEN_CHAT_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
@@ -70,6 +73,7 @@ export function ChatLauncher({ label, assistantName }: { label: string; assistan
           onClose={close}
           pendingMessage={pending}
           onPendingSent={() => setPending(null)}
+          jdRequest={jdRequest}
         />
       ) : null}
     </>

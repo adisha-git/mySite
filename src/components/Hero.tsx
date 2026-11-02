@@ -4,6 +4,7 @@ import { FaLinkedinIn } from "react-icons/fa6";
 import { hasLinkedIn, profile } from "@/data/profile";
 import { CodeCard } from "./CodeCard";
 import { DownloadCvLink } from "./DownloadCvLink";
+import { FitCheckLink } from "./FitCheckLink";
 import { TechBackdrop } from "./TechBackdrop";
 import { ButtonLink } from "./ui";
 
@@ -87,6 +88,9 @@ export function Hero() {
                 className="ml-1.5 inline size-4 align-[-3px] transition-transform group-hover:translate-x-0.5"
               />
             </a>
+          </p>
+          <p className="mt-2">
+            <FitCheckLink />
           </p>
 
           <ul className="mt-7 flex flex-wrap gap-2" aria-label="Status">
