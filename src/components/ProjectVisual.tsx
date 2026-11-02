@@ -21,15 +21,16 @@ function ChatbotMock() {
         <div className="mt-5 h-2 w-3/5 rounded bg-white/10" />
         <div className="mt-2 h-2 w-1/2 rounded bg-white/10" />
       </div>
-      <div className="absolute right-[5%] bottom-[7%] w-[56%] max-w-[260px] overflow-hidden rounded-xl bg-[#F6F8FB] text-[#0B1220] shadow-2xl shadow-black/40">
-        <div className="flex items-center gap-2 bg-[#0E7490] px-3 py-2">
+      {/* Pinned top and bottom so the header never clips; older messages scroll off under it. */}
+      <div className="absolute top-[7%] right-[5%] bottom-[7%] flex w-[56%] max-w-[260px] flex-col overflow-hidden rounded-xl bg-[#F6F8FB] text-[#0B1220] shadow-2xl shadow-black/40">
+        <div className="relative z-10 flex shrink-0 items-center gap-2 bg-[#0E7490] px-3 py-2">
           <span className="size-2 rounded-full bg-[#61DAFB]" />
           <span className="text-[10px] font-semibold tracking-wide text-white">
             Assistant · online
           </span>
         </div>
-        <div className="space-y-1.5 p-2.5 text-[9px] leading-snug sm:text-[10px]">
-          <p className="w-[85%] rounded-lg rounded-tl-sm bg-white px-2 py-1.5 shadow-sm">
+        <div className="flex min-h-0 flex-1 flex-col justify-end space-y-1.5 overflow-hidden p-2.5 text-[9px] leading-snug sm:text-[10px]">
+          <p className="w-[85%] shrink-0 rounded-lg rounded-tl-sm bg-white px-2 py-1.5 shadow-sm">
             Hi 👋 Looking for a quote? I can help.
           </p>
           <p className="ml-auto w-[70%] rounded-lg rounded-tr-sm bg-[#0B1220] px-2 py-1.5 text-[#F6F8FB]">
@@ -103,7 +104,7 @@ export function ProjectVisual({ project }: { project: Project }) {
         <span aria-hidden="true" className="bg-line size-2 rounded-full" />
         <span aria-hidden="true" className="bg-line size-2 rounded-full" />
         <span aria-hidden="true" className="bg-line size-2 rounded-full" />
-        <span className="bg-paper text-muted ml-2 truncate rounded-md px-2 py-0.5 font-mono text-[10px]">
+        <span className="bg-paper text-muted ml-2 min-w-0 truncate rounded-md px-2 py-0.5 font-mono text-[10px]">
           {host}
         </span>
       </div>
