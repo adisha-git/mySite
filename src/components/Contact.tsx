@@ -58,9 +58,11 @@ export function Contact() {
               <div className="flex items-center gap-2">
                 <a
                   href={`mailto:${profile.email}`}
-                  className="text-ink decoration-accent min-w-0 break-all underline decoration-1 underline-offset-4 hover:decoration-2"
+                  className="text-ink decoration-accent min-w-0 break-words underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
-                  {profile.email}
+                  {/* Wrap before the @ rather than mid-word on narrow screens. */}
+                  {profile.email.split("@")[0]}
+                  <wbr />@{profile.email.split("@")[1]}
                 </a>
                 <CopyEmail email={profile.email} />
               </div>

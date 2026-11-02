@@ -27,7 +27,7 @@ export function CopyEmail({ email }: { email: string }) {
       <button
         type="button"
         onClick={copy}
-        className="border-line text-muted hover:border-accent hover:text-ink inline-flex size-9 items-center justify-center rounded-full border transition-colors"
+        className="border-line text-muted hover:border-accent hover:text-ink inline-flex size-9 shrink-0 items-center justify-center rounded-full border transition-colors"
         aria-label="Copy email address"
       >
         {status === "copied" ? (

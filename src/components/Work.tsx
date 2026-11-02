@@ -80,7 +80,7 @@ function ProjectCard({ project }: { project: Project }) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackClick("visit_site")}
-              className="text-ink decoration-accent inline-flex items-center gap-1 text-sm font-medium underline decoration-1 underline-offset-[6px] hover:decoration-2"
+              className="text-ink decoration-accent -my-2 inline-flex items-center gap-1 py-2 text-sm font-medium underline decoration-1 underline-offset-[6px] hover:decoration-2"
             >
               Visit site
               <ArrowUpRight
@@ -158,7 +158,7 @@ export function Work({ projects }: { projects: readonly Project[] }) {
         Showing {visible.length} {visible.length === 1 ? "project" : "projects"}
       </p>
 
-      <m.ul layout className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <m.ul layout className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <AnimatePresence mode="popLayout" initial={false}>
           {visible.map((project, i) => (
             <m.li

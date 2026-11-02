@@ -107,7 +107,10 @@ export function Nav() {
         </ul>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          <DownloadCvLink placement="nav" className="hidden !px-4 !py-2 sm:inline-flex" />
+          {/* Wrapped: the button's own inline-flex would override `hidden`. */}
+          <span className="hidden sm:inline-flex">
+            <DownloadCvLink placement="nav" className="!px-4 !py-2" />
+          </span>
           <ThemeToggle />
           <button
             type="button"

@@ -83,7 +83,7 @@ function Entry({ job }: { job: ExperienceEntry }) {
             aria-expanded={expanded}
             aria-controls={panelId}
             onClick={() => setExpanded((e) => !e)}
-            className="text-ink decoration-accent mt-3 inline-flex items-center gap-1 py-1 text-sm font-medium underline underline-offset-[6px]"
+            className="text-ink decoration-accent mt-1.5 inline-flex items-center gap-1 py-2.5 text-sm font-medium underline underline-offset-[6px]"
           >
             {expanded ? "Show less" : "Show more"}
             <ChevronDown
