@@ -32,7 +32,7 @@ export const facts: readonly Fact[] = [
   {
     id: "role-types",
     label: "Role types",
-    text: "Adisha is open to frontend, senior frontend, full-stack, staff engineer and AI engineer roles. He is open to both permanent and contract roles, in any industry.",
+    text: "Adisha is open to frontend, senior frontend, full-stack, staff engineer and AI engineer roles, and to web developer, WordPress developer, website manager and digital or marketing-focused web roles. He is open to both permanent and contract roles, in any industry.",
   },
   {
     id: "availability",
@@ -43,6 +43,11 @@ export const facts: readonly Fact[] = [
     id: "experience",
     label: "Experience",
     text: "Adisha has 10+ years of experience delivering large-scale web applications across banking, aviation, telecommunications and enterprise environments.",
+  },
+  {
+    id: "wordpress",
+    label: "WordPress and website management",
+    text: "Adisha brings more than 11 years of experience in WordPress and website management, along with full-stack JavaScript development.",
   },
   {
     id: "employers",

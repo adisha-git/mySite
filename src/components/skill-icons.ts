@@ -1,5 +1,6 @@
 import type { IconType } from "react-icons";
 import { FaAws } from "react-icons/fa6";
+import { LuLayers } from "react-icons/lu";
 import {
   SiAppium,
   SiAppstore,
@@ -14,8 +15,11 @@ import {
   SiFirebase,
   SiGit,
   SiGithubcopilot,
+  SiGoogleanalytics,
   SiGooglecloud,
   SiGoogleplay,
+  SiGooglesearchconsole,
+  SiGoogletagmanager,
   SiHtml5,
   SiJavascript,
   SiJenkins,
@@ -81,6 +85,12 @@ export const skillIcons: Partial<Record<string, IconType>> = {
   Mocha: SiMocha,
   Appium: SiAppium,
   WordPress: SiWordpress,
+  "Gutenberg & ACF": SiWordpress,
+  // No brand logo for a pattern; a generic "layers" icon from react-icons.
+  "Headless CMS": LuLayers,
+  "Google Analytics": SiGoogleanalytics,
+  "Google Tag Manager": SiGoogletagmanager,
+  "Google Search Console": SiGooglesearchconsole,
   Strapi: SiStrapi,
   Drupal: SiDrupal,
   "App Store Connect": SiAppstore,

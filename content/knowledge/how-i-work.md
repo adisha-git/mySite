@@ -10,7 +10,9 @@ At Singapore Airlines and OCBC, he maintained a PR review checklist so the team 
 
 ## Testing
 
-Adisha treats testing as part of delivering a feature, not a separate step. At Singapore Airlines and OCBC, he used Jest and React Testing Library to write unit tests, mock API responses, and cover component behaviour and edge cases.
+Adisha treats testing as part of delivering a feature, not a separate step.
+
+The testing tools named in his experience, side by side: Jest and React Testing Library (Singapore Airlines and OCBC), Appium-based automated testing frameworks (Omobio), SonarQube for code quality (OCBC), and axe and Lighthouse for accessibility checks. At Singapore Airlines and OCBC, he used Jest and React Testing Library to write unit tests, mock API responses, and cover component behaviour and edge cases.
 
 Both teams had mandatory coverage gates that changes had to meet before merging: 80% for the relevant component at Singapore Airlines, and 90% at OCBC. Pre-push checks also blocked pushing code with failing tests. At OCBC, the team also used SonarQube to find code-quality issues and fixed the findings from its reports.
 

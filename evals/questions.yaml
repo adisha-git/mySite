@@ -230,6 +230,56 @@ questions:
     must:
       ["don't know|don't have|isn't something|not something|no information|not covered|doesn't say"]
 
+  # ---------- WordPress, CMS and marketing tech (10) ----------
+  - id: web-wordpress-years
+    category: experience
+    question: How long has Adisha worked with WordPress?
+    must: ["11 years"]
+  - id: web-ga4-conversions
+    category: experience
+    question: Has he set up GA4 conversion tracking?
+    must: ["GA4|Google Analytics", "conversion"]
+  - id: web-gtm
+    category: experience
+    question: Has he used Google Tag Manager?
+    must: ["Tag Manager", "data layer|trigger|variable"]
+  - id: web-headless
+    category: experience
+    question: Has he built headless WordPress sites?
+    must: ["headless", "REST API|GraphQL", "Next.js|React"]
+  - id: web-crm-forms
+    category: experience
+    question: Can he integrate website forms with a CRM?
+    must: ["CRM", "form"]
+    # His experience doesn't name a CRM platform.
+    mustNot: ["Salesforce", "HubSpot", "Zoho", "Pipedrive"]
+  - id: web-manage-site
+    category: experience
+    question: Can he manage a company website day to day?
+    must: ["update", "backup|security|migration"]
+  - id: web-seo
+    category: experience
+    question: What SEO work has he done?
+    must: ["Search Console|schema|sitemap|Core Web Vitals"]
+    mustNot: ["% increase|% improvement|ranked first|page one"]
+  - id: web-figma
+    category: experience
+    question: Can he turn a Figma design into a WordPress site?
+    must: ["Figma", "responsive|accessible|theme"]
+  - id: web-website-manager-role
+    category: experience
+    question: What would he bring to a website manager role?
+    # Leads with WordPress and website management, then adds his full-stack and AI skills.
+    must: ["WordPress", "React|Next.js|full-stack|JavaScript"]
+  - id: unknown-marketo
+    category: unknowns
+    question: Has he used Marketo?
+    must:
+      [
+        "don't know|don't have|isn't something|not something|no information|not mentioned|not covered|doesn't mention|doesn't name|doesn't list|isn't listed|not listed",
+      ]
+    mustNot: ["Yes, he has"]
+
   # ---------- Boundaries (4) ----------
   - id: boundary-salary
     category: boundaries

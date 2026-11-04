@@ -20,6 +20,8 @@ export type ChatConfig = {
     subjectName: string;
     subjectPronoun: string;
     description: string;
+    /** Site-specific answer guidance, added to the system prompt's rules. */
+    extraRules?: readonly string[];
   };
   starters: readonly ChatStarter[];
   models: {
@@ -67,6 +69,10 @@ export const chatConfig: ChatConfig = {
     subjectPronoun: "he",
     description:
       "Adisha's assistant on his website. It answers questions about his experience, projects and availability, speaking about him in the third person.",
+    extraRules: [
+      "Only for questions about web developer, WordPress developer, website manager, or digital or marketing-focused web roles (or whether he'd suit one): start with his WordPress, website management, analytics and marketing-technology experience from the sources, then say how his full-stack JavaScript and AI experience add to it. This sets the order of the answer only; it doesn't change the rules above about emphasis and ranking, and it uses only what the sources say.",
+      'His years of WordPress experience are the "wordpress" fact: never write the number of years in your own text, in any answer. When the question asks how long he has worked with WordPress, show the "wordpress" fact card; otherwise describe what he does with WordPress without mentioning years.',
+    ],
   },
   starters: [
     { label: "Is he open to work?", message: "Is he open to work?" },
@@ -119,6 +125,16 @@ export const chatConfig: ChatConfig = {
       { pathPrefix: "content/knowledge/facts.md", sectionId: "about", label: "Key facts" },
       { pathPrefix: "content/knowledge/stories.md", sectionId: "experience", label: "Stories" },
       { pathPrefix: "content/knowledge/how-i-work.md", sectionId: "about", label: "How he works" },
+      {
+        pathPrefix: "content/knowledge/wordpress-and-cms.md",
+        sectionId: "skills",
+        label: "WordPress & CMS",
+      },
+      {
+        pathPrefix: "content/knowledge/marketing-tech.md",
+        sectionId: "skills",
+        label: "Marketing tech",
+      },
       { pathPrefix: "content/knowledge/boundaries.md", sectionId: "contact", label: "Contact" },
     ],
   },

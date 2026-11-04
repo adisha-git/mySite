@@ -18,7 +18,9 @@ Adisha is open to relocating to Melbourne, Sydney or Adelaide.
 
 Adisha is a Senior Software Engineer specialising in frontend and full-stack web development with React.js, Next.js, TypeScript, JavaScript and Node.js. He has led frontend architecture as a technical lead and mentored junior and mid-level engineers.
 
-Adisha is open to frontend, senior frontend, full-stack, staff engineer and AI engineer roles. He is open to both permanent and contract roles, in any industry.
+Adisha also works as a WordPress developer and website manager, with analytics, tag management, CRM and marketing-technology experience.
+
+Adisha is open to frontend, senior frontend, full-stack, staff engineer and AI engineer roles, and to web developer, WordPress developer, website manager and digital or marketing-focused web roles. He is open to both permanent and contract roles, in any industry.
 
 ## Availability
 
@@ -39,6 +41,10 @@ His employers, most recent first:
 - Innovative Software Engineering (Pvt) Ltd, Colombo, Sri Lanka — Software Engineer, August 2018 – October 2019
 - Omobio (Pvt) Ltd, Colombo, Sri Lanka — Software Engineer, June 2017 – August 2018
 - WAD International Ltd, Colombo, Sri Lanka — Associate Software Engineer, July 2015 – July 2016
+
+## WordPress and website management
+
+Adisha brings more than 11 years of experience in WordPress and website management, along with full-stack JavaScript development.
 
 ## Education
 

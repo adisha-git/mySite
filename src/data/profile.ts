@@ -204,7 +204,7 @@ export const profile = {
         {
           step: "Evaluate",
           detail:
-            "A 50-question suite checks the answers for required facts and groundedness, with Claude as the judge, before prompt changes are merged.",
+            "A 60-question suite checks the answers for required facts and groundedness, with Claude as the judge, before prompt changes are merged.",
         },
       ],
       cta: "Ask the chat",
@@ -574,7 +574,17 @@ export const profile = {
       ],
     },
     { title: "Testing", skills: ["Jest", "Mocha", "Appium"] },
-    { title: "CMS", skills: ["WordPress", "Strapi", "Drupal"] },
+    { title: "CMS", skills: ["WordPress", "Headless CMS", "Gutenberg & ACF", "Strapi", "Drupal"] },
+    {
+      title: "Analytics & Marketing Tech",
+      skills: [
+        "Google Analytics",
+        "Google Tag Manager",
+        "Google Search Console",
+        "CRM integration",
+        "Technical SEO",
+      ],
+    },
     {
       title: "Mobile Delivery",
       skills: ["App Store Connect", "TestFlight", "Google Play Console", "App Center"],
