@@ -233,6 +233,7 @@ questions:
   # ---------- WordPress, CMS and marketing tech (10) ----------
   - id: web-wordpress-years
     category: experience
+    facts: ["website-development"]
     question: How long has Adisha worked with WordPress?
     must: ["11 years"]
   - id: web-ga4-conversions
@@ -279,6 +280,40 @@ questions:
         "don't know|don't have|isn't something|not something|no information|not mentioned|not covered|doesn't mention|doesn't name|doesn't list|isn't listed|not listed",
       ]
     mustNot: ["Yes, he has"]
+
+  # ---------- Modern website development (6) ----------
+  # General website questions lead with Next.js and headless CMS; WordPress comes after, if at all.
+  - id: site-what-websites
+    category: experience
+    question: What kind of websites does Adisha build?
+    must: ["Next.js", "headless"]
+    before: [{ first: "Next.js|headless", then: "WordPress" }]
+  - id: site-building-websites
+    category: experience
+    question: Can he build a website for my business?
+    must: ["Next.js"]
+    before: [{ first: "Next.js|headless", then: "WordPress" }]
+  - id: site-ssr
+    category: experience
+    question: Does he use server-side rendering?
+    must: ["server-side rendering|SSR"]
+    before: [{ first: "server-side rendering|SSR", then: "WordPress" }]
+  - id: site-nextjs-seo
+    category: experience
+    question: How does he handle SEO in Next.js?
+    must: ["metadata|structured data|schema|sitemap|server-rendered|canonical"]
+    mustNot: ["% increase|% improvement|ranked first|page one"]
+    before: [{ first: "Next.js|server-rendered|metadata", then: "WordPress" }]
+  - id: site-headless-cms
+    category: experience
+    question: Has he built headless CMS sites?
+    must: ["headless", "API"]
+    before: [{ first: "Next.js|React", then: "WordPress" }]
+  - id: site-web-developer-role
+    category: experience
+    question: Would he suit a web developer role?
+    must: ["Next.js|React"]
+    before: [{ first: "Next.js|React", then: "WordPress" }]
 
   # ---------- Boundaries (4) ----------
   - id: boundary-salary

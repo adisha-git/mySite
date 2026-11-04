@@ -181,3 +181,45 @@ describe("eval checks for site actions", () => {
     ).toContain("unrequested tool openProject called");
   });
 });
+
+describe("eval checks for answer order", () => {
+  const order = question({ before: [{ first: "Next.js|headless", then: "WordPress" }] });
+  const answer = (text: string) => ({ text, tools: [], facts: [] });
+
+  it("passes when the first item comes before the second", () => {
+    expect(checkAnswer(order, answer("He builds with Next.js. WordPress is an option."))).toEqual(
+      [],
+    );
+  });
+
+  it("passes when the second item isn't mentioned", () => {
+    expect(checkAnswer(order, answer("He uses a headless CMS."))).toEqual([]);
+  });
+
+  it("fails when the second item comes first", () => {
+    expect(checkAnswer(order, answer("WordPress, and also Next.js."))).toContain(
+      'mentions "WordPress" before "Next.js|headless"',
+    );
+  });
+
+  it("fails when the first item is missing", () => {
+    expect(checkAnswer(order, answer("WordPress sites."))).toContain('missing "Next.js|headless"');
+  });
+});
+
+describe("eval checks for the website-development fact", () => {
+  const q = question({ category: "experience" });
+  const answer = (text: string) => ({ text, tools: [], facts: [] });
+
+  it("allows everyday website wording that overlaps the fact", () => {
+    expect(checkAnswer(q, answer("Sri Aero is built with Next.js, React and TypeScript."))).toEqual(
+      [],
+    );
+  });
+
+  it("fails when the answer writes out his years of WordPress experience", () => {
+    expect(checkAnswer(q, answer("He has more than 11 years of WordPress experience."))).toContain(
+      'text writes out fact "website-development"',
+    );
+  });
+});

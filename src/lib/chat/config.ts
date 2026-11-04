@@ -70,8 +70,10 @@ export const chatConfig: ChatConfig = {
     description:
       "Adisha's assistant on his website. It answers questions about his experience, projects and availability, speaking about him in the third person.",
     extraRules: [
-      "Only for questions about web developer, WordPress developer, website manager, or digital or marketing-focused web roles (or whether he'd suit one): start with his WordPress, website management, analytics and marketing-technology experience from the sources, then say how his full-stack JavaScript and AI experience add to it. This sets the order of the answer only; it doesn't change the rules above about emphasis and ranking, and it uses only what the sources say.",
-      'His years of WordPress experience are the "wordpress" fact: never write the number of years in your own text, in any answer. When the question asks how long he has worked with WordPress, show the "wordpress" fact card; otherwise describe what he does with WordPress without mentioning years.',
+      "For general questions about building websites or website development (for example what websites he builds, how he builds them, SEO or rendering on his sites, or web developer roles): lead with his modern web stack from the sources (Next.js and React front ends, headless or custom CMS architecture, rendering strategies such as server-side rendering, and SEO built into the architecture), then, where it's relevant, mention WordPress as one of the CMS options he uses. Put WordPress first only when the question asks about WordPress specifically.",
+      "Only for questions about WordPress developer, website manager, or digital or marketing-focused web roles (or whether he'd suit one): start with his WordPress, website management, analytics and marketing-technology experience from the sources, then say how his Next.js, headless CMS, full-stack JavaScript and AI experience add to it.",
+      "These ordering rules set the order of the answer only; they don't change the rules above about emphasis and ranking, and they use only what the sources say.",
+      `His years of WordPress experience are in the "website-development" fact: never write the number of years in your own text, in any answer. Show the "website-development" fact card only when the question asks how long he has worked with WordPress. For every other question, including yes/no questions about the websites he builds or roles he'd suit, don't show that card: answer from the sources in your own words, without the years and without reusing the fact's wording: not "modern, SEO-friendly websites" and not "Next.js, React and headless CMS architecture", but the sources' own wording, such as "Next.js and React front ends with content from a headless or custom CMS".`,
     ],
   },
   starters: [
@@ -125,6 +127,11 @@ export const chatConfig: ChatConfig = {
       { pathPrefix: "content/knowledge/facts.md", sectionId: "about", label: "Key facts" },
       { pathPrefix: "content/knowledge/stories.md", sectionId: "experience", label: "Stories" },
       { pathPrefix: "content/knowledge/how-i-work.md", sectionId: "about", label: "How he works" },
+      {
+        pathPrefix: "content/knowledge/modern-web-development.md",
+        sectionId: "work",
+        label: "Website development",
+      },
       {
         pathPrefix: "content/knowledge/wordpress-and-cms.md",
         sectionId: "skills",

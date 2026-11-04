@@ -45,9 +45,9 @@ export const facts: readonly Fact[] = [
     text: "Adisha has 10+ years of experience delivering large-scale web applications across banking, aviation, telecommunications and enterprise environments.",
   },
   {
-    id: "wordpress",
-    label: "WordPress and website management",
-    text: "Adisha brings more than 11 years of experience in WordPress and website management, along with full-stack JavaScript development.",
+    id: "website-development",
+    label: "Website development",
+    text: "Adisha is a full-stack web developer specialising in modern, SEO-friendly websites built with Next.js, React and headless CMS architecture, with more than 11 years of WordPress and website management experience.",
   },
   {
     id: "employers",

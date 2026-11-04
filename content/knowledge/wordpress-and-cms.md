@@ -1,10 +1,10 @@
-# Adisha Madhushanka — WordPress and headless CMS
+# Adisha Madhushanka — WordPress and website management
 
-WordPress development, website management and headless CMS architecture.
+WordPress as one of the CMS options Adisha uses, both traditional and headless, and the website management work that goes with it.
 
 ## WordPress experience
 
-Adisha's WordPress experience covers both development and website management, and it sits alongside his React, Next.js and Node.js work.
+WordPress is one option within Adisha's wider CMS experience, not the centre of it. His website development starts with Next.js and React front ends and a headless or custom CMS, and he picks WordPress, traditional or headless, when it suits the project. His WordPress experience covers both development and website management.
 
 His WordPress experience began with his first role, at WAD International (July 2015 – July 2016), where he developed and customised WordPress websites for corporate and hospitality clients. WordPress was also part of the team's stack at MindLogics Limited (January 2026 – August 2026). The rest of his WordPress experience isn't tied to a particular employer.
 
@@ -24,11 +24,11 @@ Adisha works on site performance against Core Web Vitals, and on technical and o
 
 ## Headless WordPress
 
-Adisha uses WordPress as a headless CMS, serving content through the WordPress REST API and GraphQL to front ends built with React and Next.js.
+Headless WordPress is one of the headless CMS setups he uses. Adisha uses WordPress as a headless CMS, serving content through the WordPress REST API and GraphQL to front ends built with React and Next.js.
 
 He designs content models so that marketing teams can edit content without help from a developer.
 
-He chooses between a traditional WordPress site and a headless one based on the project's performance needs, how the content will be edited, and the budget.
+He chooses between a headless or custom CMS, a headless WordPress site and a traditional WordPress site based on the project's performance needs, how the content will be edited, and the budget.
 
 ## Typical problems and how he approaches them
 
@@ -40,7 +40,7 @@ Pages that load slowly: he works on Core Web Vitals and technical SEO, so pages 
 
 Marketing teams waiting on developers for content changes: he designs content models, custom blocks and ACF fields so the people who own the content can change it themselves.
 
-Picking the right architecture: rather than defaulting to headless or traditional WordPress, he weighs the project's performance, editing and budget needs.
+Picking the right architecture: rather than defaulting to WordPress or to any one CMS, he weighs the project's performance, editing and budget needs.
 
 Moving a site: he handles hosting changes and site migrations.
 

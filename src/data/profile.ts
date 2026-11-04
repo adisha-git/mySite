@@ -204,7 +204,7 @@ export const profile = {
         {
           step: "Evaluate",
           detail:
-            "A 60-question suite checks the answers for required facts and groundedness, with Claude as the judge, before prompt changes are merged.",
+            "A 66-question suite checks the answers for required facts and groundedness, with Claude as the judge, before prompt changes are merged.",
         },
       ],
       cta: "Ask the chat",

@@ -42,9 +42,9 @@ His employers, most recent first:
 - Omobio (Pvt) Ltd, Colombo, Sri Lanka — Software Engineer, June 2017 – August 2018
 - WAD International Ltd, Colombo, Sri Lanka — Associate Software Engineer, July 2015 – July 2016
 
-## WordPress and website management
+## Website development
 
-Adisha brings more than 11 years of experience in WordPress and website management, along with full-stack JavaScript development.
+Adisha is a full-stack web developer specialising in modern, SEO-friendly websites built with Next.js, React and headless CMS architecture, with more than 11 years of WordPress and website management experience.
 
 ## Education
 

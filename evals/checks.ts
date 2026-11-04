@@ -27,6 +27,8 @@ export const questionSchema = z.object({
   facts: z.array(z.string()).default([]),
   /** Qualifiers to keep: if the answer mentions `when`, it must also say `must`. */
   keep: z.array(z.object({ when: z.string(), must: z.string() })).default([]),
+  /** Order: `first` must appear, and before any mention of `then`. */
+  before: z.array(z.object({ first: z.string(), then: z.string() })).default([]),
 });
 export type Question = z.infer<typeof questionSchema>;
 
@@ -48,6 +50,15 @@ export function visibleAnswer(answer: EvalAnswer): string {
 
 const matches = (text: string, item: string) =>
   item.split("|").some((alt) => text.toLowerCase().includes(alt.toLowerCase()));
+
+/** Where `item` (or its earliest "a|b" alternative) first appears, or -1. */
+const firstIndex = (text: string, item: string) => {
+  const found = item
+    .split("|")
+    .map((alt) => text.toLowerCase().indexOf(alt.toLowerCase()))
+    .filter((i) => i >= 0);
+  return found.length ? Math.min(...found) : -1;
+};
 
 const words = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}+]+/gu) ?? [];
 
@@ -93,8 +104,19 @@ const WRITE_OUT_EXEMPT = new Set(["contact"]);
  */
 const LIST_FACTS = new Set(["employers"]);
 
+/**
+ * Facts whose wording is also everyday website language ("built with Next.js,
+ * React", "a full-stack web developer"), so any 5-word overlap would flag normal
+ * answers. For these, writing out the fact means stating its key claim.
+ */
+const KEY_CLAIMS: Record<string, RegExp> = {
+  "website-development": /\b(?:11\+?|eleven)\s+years\b/i,
+};
+
 /** True if `text` writes out `fact`: for a list fact, two or more of its items. */
 export function writesOut(text: string, fact: Fact): boolean {
+  const claim = KEY_CLAIMS[fact.id];
+  if (claim) return claim.test(text);
   if (!LIST_FACTS.has(fact.id)) return sharesRun(text, fact.text);
   const items = fact.text.replace(/^[^:]*:\s*/, "").split(/;\s*/);
   return items.filter((item) => sharesRun(text, item)).length >= 2;
@@ -146,6 +168,12 @@ export function checkAnswer(
     if (matches(visible, when) && !matches(visible, must)) {
       failures.push(`mentions "${when}" without its qualifier "${must}"`);
     }
+  }
+  for (const { first, then } of q.before) {
+    const a = firstIndex(visible, first);
+    const b = firstIndex(visible, then);
+    if (a < 0) failures.push(`missing "${first}"`);
+    else if (b >= 0 && b < a) failures.push(`mentions "${then}" before "${first}"`);
   }
   if (q.tool && !answer.tools.includes(q.tool)) failures.push(`tool ${q.tool} not called`);
   for (const tool of q.notTools) {

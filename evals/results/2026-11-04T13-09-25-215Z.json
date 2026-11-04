@@ -1,0 +1,43 @@
+{
+  "ranAt": "2026-11-04T13:09:25.216Z",
+  "baseUrl": "http://localhost:3000",
+  "passed": 1,
+  "total": 1,
+  "results": [
+    {
+      "id": "site-ssr",
+      "category": "experience",
+      "question": "Does he use server-side rendering?",
+      "must": [
+        "server-side rendering|SSR"
+      ],
+      "mustNot": [],
+      "notTools": [],
+      "facts": [],
+      "keep": [],
+      "before": [
+        {
+          "first": "server-side rendering|SSR",
+          "then": "WordPress"
+        }
+      ],
+      "passed": true,
+      "failures": [],
+      "warnings": [],
+      "answer": "Yes. He uses server-side rendering for pages that need fresh data on every request, and he chooses it alongside static generation, incremental static regeneration and client-side rendering depending on each page. He also builds server-rendered HTML so search engines can read the pages.",
+      "modelText": "Yes. He uses server-side rendering for pages that need fresh data on every request, and he chooses it alongside static generation, incremental static regeneration and client-side rendering depending on each page. He also builds server-rendered HTML so search engines can read the pages. [[sources: 1, 3]]",
+      "factCards": [],
+      "tools": [],
+      "sources": [
+        {
+          "path": "content/knowledge/modern-web-development.md",
+          "heading": "Adisha Madhushanka — Building websites with Next.js and a headless CMS > Headless and custom CMS architecture; Rendering strategies in Next.js"
+        },
+        {
+          "path": "content/knowledge/modern-web-development.md",
+          "heading": "Adisha Madhushanka — Building websites with Next.js and a headless CMS > Technical SEO built into the architecture; Responsive, accessible front ends; Performance; Deployment; Value to the business"
+        }
+      ]
+    }
+  ]
+}

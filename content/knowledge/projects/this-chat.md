@@ -16,7 +16,7 @@ Fixed facts such as his work rights and location are inserted word for word from
 
 If a visitor wants Adisha to get back to them, the chat drafts their details as a card. Nothing is saved or emailed until they check it and click Confirm; then the lead is stored and Adisha gets an email through Resend.
 
-An evaluation suite of about 60 questions checks the answers for required facts, forbidden content and groundedness, using Claude Haiku as a judge.
+An evaluation suite of about 66 questions checks the answers for required facts, forbidden content and groundedness, using Claude Haiku as a judge.
 
 ## How it was built
 
